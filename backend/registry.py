@@ -1,0 +1,98 @@
+"""Central conversion registry.
+
+Engines contribute directed edges (src → dst) to a format graph. The graph is built
+once and, because it is small (≈50 nodes), the shortest conversion chain from every
+source to every reachable target is precomputed with one BFS per source.
+"""
+
+from __future__ import annotations
+
+from collections import deque
+from dataclasses import dataclass
+from functools import lru_cache
+
+from app.formats import FORMATS, POPULARITY_RANK
+from engines import ALL_ENGINES
+from engines.base import Engine
+
+MAX_CHAIN_LENGTH = 3
+
+
+@dataclass(frozen=True, slots=True)
+class Step:
+    src: str
+    dst: str
+    engine: Engine
+
+
+@dataclass(frozen=True, slots=True)
+class Target:
+    format: str
+    steps: int
+
+
+class UnsupportedConversion(Exception):
+    def __init__(self, src: str | None, dst: str) -> None:
+        source = FORMATS[src].label if src in FORMATS else "this file"
+        target = FORMATS[dst].label if dst in FORMATS else dst
+        super().__init__(f"Sorry, Hakobu can't convert {source} to {target} yet.")
+
+
+class ConversionRegistry:
+    def __init__(self, engines: list[Engine]) -> None:
+        # The first engine registered for a pair wins, so list order is priority order.
+        self._edges: dict[str, dict[str, Engine]] = {}
+        for engine in engines:
+            for src, dst in sorted(engine.supported_pairs()):
+                self._edges.setdefault(src, {}).setdefault(dst, engine)
+        self._paths: dict[str, dict[str, tuple[Step, ...]]] = {
+            src: self._bfs(src) for src in FORMATS
+        }
+
+    def _bfs(self, source: str) -> dict[str, tuple[Step, ...]]:
+        paths: dict[str, tuple[Step, ...]] = {source: ()}
+        queue = deque([source])
+        while queue:
+            node = queue.popleft()
+            path = paths[node]
+            if len(path) >= MAX_CHAIN_LENGTH:
+                continue
+            if path and (path[-1].src, path[-1].dst) in path[-1].engine.terminal_pairs:
+                continue  # multi-output steps can only end a chain
+            # Visit popular formats first so ties resolve to sensible intermediates.
+            for dst in sorted(self._edges.get(node, {}), key=_rank):
+                if dst not in paths:
+                    paths[dst] = (*path, Step(node, dst, self._edges[node][dst]))
+                    queue.append(dst)
+        del paths[source]
+        return paths
+
+    def path(self, src: str, dst: str) -> tuple[Step, ...]:
+        """Shortest chain of steps for src → dst; empty when src == dst."""
+        if src == dst:
+            return ()
+        try:
+            return self._paths[src][dst]
+        except KeyError:
+            raise UnsupportedConversion(src, dst) from None
+
+    def targets(self, src: str) -> list[Target]:
+        """Reachable targets, most likely choices first."""
+        category = FORMATS[src].category
+        reachable = self._paths.get(src, {})
+        return sorted(
+            (Target(dst, len(steps)) for dst, steps in reachable.items()),
+            key=lambda t: (FORMATS[t.format].category != category, t.steps, _rank(t.format)),
+        )
+
+    def matrix(self) -> dict[str, list[Target]]:
+        return {src: self.targets(src) for src in FORMATS if self._paths.get(src)}
+
+
+def _rank(fmt: str) -> int:
+    return POPULARITY_RANK.get(fmt, len(POPULARITY_RANK))
+
+
+@lru_cache
+def get_registry() -> ConversionRegistry:
+    return ConversionRegistry([engine for engine in ALL_ENGINES if engine.available()])
