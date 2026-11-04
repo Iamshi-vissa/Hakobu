@@ -5,14 +5,17 @@ detects what the file *really* is from its bytes (not its name), shows only the 
 become, converts it with live progress, and hands back a download — one file at a time or a
 whole batch as a ZIP.
 
-![Hakobu converting a batch of files](docs/screenshot.png)
+| Light | Dark |
+|---|---|
+| ![Hakobu in light mode: beige page, forest-green buttons, a converted batch of files](docs/screenshot.png) | ![Hakobu in dark mode: deep-forest page with beige text](docs/screenshot-dark.png) |
 
 - **~50 formats, 800+ conversion paths**: images, documents, spreadsheets & data, presentations,
   audio, video, e-books and archives. Missing direct paths are bridged automatically
   (e.g. PPTX → PDF → PNG).
 - **Fast by default**: stream copy when only the container changes, a warm LibreOffice pool,
   hardware H.264 when available, result caching, and a worker pool sized to your CPUs.
-- **Forest green & beige**: a calm palette in light and dark mode, every text pair WCAG AA.
+- **Forest green & beige**: a calm palette in light and dark mode (follows your system, or
+  toggle it). Every text colour meets WCAG AA.
 - **Built to be safe**: content-based validation, sandboxed conversions with timeouts and memory
   caps, no `shell=True`, macros disabled, archive-bomb and zip-slip guards, and every file deleted
   after an hour.
@@ -167,7 +170,7 @@ backend/
   workers/        RQ task (run.py starts the pool + unoserver; tasks.py runs a job)
   tests/          pytest: one file per engine, plus detection, registry, storage and end-to-end API
 frontend/
-  app/            Next.js App Router (layout, page, global styles)
+  app/            Next.js App Router (layout, page, globals.css with the colour tokens)
   components/
     reactbits/    React Bits components, installed with the CLI
     ui/           shadcn/ui primitives (select, dialog, toast, button)
@@ -255,6 +258,47 @@ Detection is automatic.
 
 ---
 
+## Design & theme
+
+Hakobu uses a **forest green and beige** palette. All colours are CSS variables in
+`frontend/app/globals.css`: `:root` for light mode and `.dark` for dark mode. Tailwind classes
+(`bg-primary`, `text-muted-foreground`, …), the shadcn/ui primitives and the React Bits components
+all read from them, so changing the palette is a one-file edit.
+
+| Token | Light | Dark | Used for |
+|---|---|---|---|
+| `--background` | `#f4eee1` beige | `#0f1a13` deep forest | Page |
+| `--card` | `#fbf7ee` cream | `#17251b` forest | Cards, upload zone, menus |
+| `--foreground` | `#1e2b20` | `#efe7d4` beige | Body text |
+| `--muted-foreground` | `#5b6650` | `#b7b09a` | Secondary text |
+| `--primary` | `#2e5e3e` forest green | `#3e7a50` | Buttons, icons, progress |
+| `--brand-soft` | `#2e5e3e` | `#d8c9a0` beige-gold | Headline accent |
+| `--success` / `--destructive` | `#2e6b40` / `#a63d2f` | `#8fc79c` / `#e8907f` | Done and error states |
+
+Measured contrast:
+
+| Pair | Light | Dark |
+|---|---|---|
+| Body text on background | 12.8:1 | 14.5:1 |
+| Button text on primary | 7.0:1 | 4.8:1 |
+| Headline accent on background | 6.5:1 | 10.9:1 |
+
+Every other text pair also stays above the 4.5:1 AA minimum, and Lighthouse's contrast audit passes
+in both modes.
+
+- **Theme toggle**: the header button cycles System → Light → Dark. The choice is saved in
+  `localStorage`, and an inline script applies it before first paint, so there's no flash.
+- **Reduced motion**: with `prefers-reduced-motion`, the background stays a static gradient, the
+  headline renders without animation, and CSS transitions are cut to near zero.
+- **Changing the colours**:
+  1. Edit the tokens in `globals.css`.
+  2. Three components need literal colour values, because they parse colours or draw them on a
+     canvas, so update those too: the Aurora stops in `components/app/HeroBackground.tsx`, the
+     ShinyText colours in `HeroHeadline.tsx`, and the ClickSpark colours in `UploadZone.tsx`.
+  3. Update the favicon, `app/icon.svg`.
+
+---
+
 ## React Bits components
 
 Each component was installed individually with the CLI (TypeScript + Tailwind variant) into
@@ -264,20 +308,23 @@ Each component was installed individually with the CLI (TypeScript + Tailwind va
 npx shadcn@latest add https://reactbits.dev/r/BlurText-TS-TW
 ```
 
-| Component | Used for | Loading |
-|---|---|---|
-| **Aurora** | Hero background | Lazy (`next/dynamic`, `ssr: false`), mounted after idle, desktop only, never with reduced motion; pauses itself off-screen |
-| **BlurText** | Headline "Hakobu — carry your files" | Lazy; the server renders a static `<h1>` first |
-| **ShinyText** | The "anywhere" accent | Lazy |
-| **SpotlightCard** | Drag-and-drop upload zone | Eager (no dependencies, above the fold) |
-| **ClickSpark** | Feedback on the "Choose files" button | Eager (tiny canvas) |
-| **AnimatedList** | File queue (≤ 50 files; virtualised beyond that) | Lazy, with the rest of the queue UI |
-| **Stepper** | Upload → Choose format → Convert → Download | Lazy |
-| **CountUp** | "N files converted, X MB saved" | Lazy |
+| Component | Used for | Colours | Loading |
+|---|---|---|---|
+| **Aurora** | Hero background | Forest greens with a beige band | Lazy (`next/dynamic`, `ssr: false`), mounted after idle, desktop only, never with reduced motion; pauses itself off-screen |
+| **BlurText** | Headline "Hakobu — carry your files" | Theme text colour | Lazy; the server renders a static `<h1>` first |
+| **ShinyText** | The "anywhere" accent | Forest green (light) / beige (dark) | Lazy |
+| **SpotlightCard** | Drag-and-drop upload zone | Card surface with a soft green spotlight | Eager (no dependencies, above the fold) |
+| **ClickSpark** | Feedback on the "Choose files" button | Green and beige sparks | Eager (tiny canvas) |
+| **AnimatedList** | File queue (≤ 50 files; virtualised beyond that) | Theme card colours | Lazy, with the rest of the queue UI |
+| **Stepper** | Upload → Choose format → Convert → Download | Theme tokens through its CSS variables; green checkmarks | Lazy |
+| **CountUp** | "N files converted, X MB saved" | Theme text colour | Lazy |
 
-`AnimatedList` has one small local addition, an `interactiveItems` prop. File cards contain their
-own buttons and selects, so the list renders `list`/`listitem` semantics instead of a selectable
-`listbox`/`option`. The vendored sources are otherwise unchanged and excluded from ESLint.
+The colours are applied through each component's own props and CSS variables (for example
+SpotlightCard's `--spotlight-card-surface` and Stepper's `--stepper-*`), so the vendored sources
+didn't need recolouring. The one local change is in `AnimatedList`: an `interactiveItems` prop.
+File cards contain their own buttons and selects, so the list renders `list`/`listitem` semantics
+instead of a selectable `listbox`/`option`. The vendored sources are otherwise unchanged and
+excluded from ESLint.
 
 shadcn/ui is used only for primitives React Bits doesn't cover: **Select** (grouped target
 formats), **Dialog** (advanced options), **Sonner** toasts and **Button**.
@@ -290,7 +337,7 @@ Measured on the production build:
 
 - **Initial JS: ~166 KB gzipped** (target < 200 KB). The file queue, Radix primitives, toasts and
   every animated component are separate lazy chunks.
-- **Lighthouse: Performance 99 (mobile) / 100 (desktop)**, Accessibility 100, Best Practices 100,
+- **Lighthouse: Performance 97 (mobile) / 100 (desktop)**, Accessibility 100, Best Practices 100,
   SEO 100.
 
 Backend:
