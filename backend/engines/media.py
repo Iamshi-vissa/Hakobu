@@ -77,7 +77,7 @@ class Probe:
 
 def probe(path: Path) -> Probe:
     try:
-        result = subprocess.run(  # noqa: S603 - fixed argv
+        result = subprocess.run(
             ["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", str(path)],
             capture_output=True, timeout=PROBE_TIMEOUT, check=True,
         )
@@ -127,7 +127,7 @@ OTHER_ENCODERS: dict[str, VideoEncoder] = {
 def _encoder_works(encoder: VideoEncoder) -> bool:
     filters = ["-vf", ",".join(encoder.filters)] if encoder.filters else []
     try:
-        subprocess.run(  # noqa: S603 - fixed argv
+        subprocess.run(
             ["ffmpeg", "-hide_banner", "-loglevel", "error", *encoder.device, "-f", "lavfi",
              "-i", "color=s=256x256:d=0.2", "-frames:v", "2", *filters, *encoder.codec, "-f", "null", "-"],
             capture_output=True, timeout=20, check=True,

@@ -305,7 +305,10 @@ export function useConverter(maxUploadMb: number) {
   }, []);
 
   const mergeable = useMemo(
-    () => items.filter((i) => i.fileId && i.format && MERGEABLE.has(i.format.id) && !i.mergedFrom),
+    () =>
+      items.filter(
+        (i) => i.fileId && i.format && MERGEABLE.has(i.format.id) && !i.mergedFrom && i.status !== "error",
+      ),
     [items],
   );
 

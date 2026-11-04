@@ -20,6 +20,6 @@ async def sweep_forever() -> None:
             removed = await anyio.to_thread.run_sync(get_storage().purge_older_than, settings.file_ttl_seconds)
             if removed:
                 log.info("cleanup removed %d expired entries", removed)
-        except Exception:  # noqa: BLE001 - the sweeper must survive transient errors
+        except Exception:
             log.exception("cleanup sweep failed")
         await asyncio.sleep(settings.cleanup_interval_seconds)

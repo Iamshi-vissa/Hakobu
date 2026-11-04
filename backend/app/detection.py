@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 import zlib
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import magic
@@ -18,6 +19,10 @@ import magic
 from app.formats import FORMATS, extension_of
 
 HEAD_SIZE = 64 * 1024
+OLE_DIRECTORY_READ = 2048  # first few directory sectors of an OLE2 compound file
+
+ReadAt = Callable[[int, int], bytes]
+"""Optional ``(offset, n) -> bytes`` for formats whose marker sits at a known offset."""
 
 _TEXT_FORMATS = frozenset({"txt", "md", "csv", "tsv", "json", "yaml", "xml", "html", "svg"})
 _OOXML = {b"word/": "docx", b"xl/": "xlsx", b"ppt/": "pptx"}
@@ -41,6 +46,9 @@ _FTYP_BRANDS = {
     b"qt  ": "mov",
 }
 _MIME_FALLBACK = {f.mime: f.id for f in FORMATS.values()}
+# ELF, PE (MZ), Mach-O (32/64-bit, both endians) and fat binaries are never accepted.
+_EXECUTABLE_MAGIC = (b"\x7fELF", b"MZ", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe",
+                     b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe")
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,21 +57,28 @@ class Detection:
     mime: str
 
 
-def detect(head: bytes, filename: str = "") -> Detection:
-    """Detect a file's format from its leading bytes (and, for text, its name)."""
+def detect(head: bytes, filename: str = "", read_at: ReadAt | None = None) -> Detection:
+    """Detect a file's format from its leading bytes (and, for text, its name).
+
+    ``read_at`` lets OLE2 files (DOC/XLS/PPT), whose stream directory may sit anywhere,
+    be classified by reading just that directory sector instead of the whole file.
+    """
     hint = extension_of(filename)
     mime = magic.from_buffer(head, mime=True) if head else "application/x-empty"
-    fmt = _detect_binary(head, hint)
-    if fmt is None and _is_text(head):
+    text = _is_text(head)
+    if not text and head.startswith(_EXECUTABLE_MAGIC):
+        return Detection(None, mime)
+    fmt = _detect_binary(head, hint, read_at)
+    if fmt is None and text:
         fmt = _detect_text(head, hint)
-    if fmt is None:
+    if fmt is None and (text or not mime.startswith("text/")):
         fmt = _MIME_FALLBACK.get(mime)
     if fmt is not None:
         mime = FORMATS[fmt].mime
     return Detection(fmt, mime)
 
 
-def _detect_binary(h: bytes, hint: str | None) -> str | None:  # noqa: C901 - flat signature table
+def _detect_binary(h: bytes, hint: str | None, read_at: ReadAt | None) -> str | None:
     if h.startswith(b"\x89PNG\r\n\x1a\n"):
         return "png"
     if h.startswith(b"\xff\xd8\xff"):
@@ -101,7 +116,7 @@ def _detect_binary(h: bytes, hint: str | None) -> str | None:  # noqa: C901 - fl
     if h.startswith((b"PK\x03\x04", b"PK\x05\x06")):
         return _detect_zip(h, hint)
     if h.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
-        return _detect_ole(h, hint)
+        return _detect_ole(h, hint, read_at)
     if h.startswith(b"ID3"):
         return "aac" if hint == "aac" else "mp3"
     if len(h) >= 2 and h[0] == 0xFF:
@@ -137,12 +152,19 @@ def _detect_zip(h: bytes, hint: str | None) -> str:
     return "zip"
 
 
-def _detect_ole(h: bytes, hint: str | None) -> str:
+def _detect_ole(h: bytes, hint: str | None, read_at: ReadAt | None) -> str:
     if hint in ("doc", "xls", "ppt"):
         return hint
-    for marker, fmt in _OLE_STREAMS.items():
-        if marker in h:
-            return fmt
+    regions = [h]
+    if read_at is not None and len(h) >= 52:
+        sector_size = 1 << int.from_bytes(h[30:32], "little")
+        directory = int.from_bytes(h[48:52], "little")
+        if sector_size in (512, 4096) and directory < 0xFFFFFFFA:
+            regions.append(read_at((directory + 1) * sector_size, OLE_DIRECTORY_READ))
+    for region in regions:
+        for marker, fmt in _OLE_STREAMS.items():
+            if marker in region:
+                return fmt
     return "doc"
 
 

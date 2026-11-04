@@ -19,7 +19,7 @@ from rq.worker_pool import WorkerPool
 from app.config import get_settings
 from app.redis_client import get_redis
 from engines.media import H264_ENV, detect_h264_encoder
-from engines.office import profile_uri
+from engines.office import profile_dir
 
 log = logging.getLogger("hakobu.worker")
 
@@ -31,12 +31,12 @@ RECYCLE_AFTER = 250  # conversions per LibreOffice process
 def _start_unoserver(slot: int) -> subprocess.Popen[bytes]:
     settings = get_settings()
     port = settings.unoserver_base_port + slot
-    return subprocess.Popen(  # noqa: S603 - fixed argv
+    return subprocess.Popen(
         [
             sys.executable, "-m", "unoserver.server",
             "--interface", settings.unoserver_host, "--port", str(port),
             "--uno-port", str(port + UNO_PORT_OFFSET),
-            "--user-installation", profile_uri(slot),
+            "--user-installation", str(profile_dir(slot)),  # unoserver builds the URI itself
             "--conversion-timeout", str(settings.subprocess_timeout_seconds),
             # Recycle LibreOffice periodically to contain leaks; the supervisor restarts it.
             "--stop-after", str(RECYCLE_AFTER),

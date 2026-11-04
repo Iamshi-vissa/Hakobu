@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import logging
+import resource
 import shutil
 import tempfile
 import time
 from contextlib import ExitStack
 from pathlib import Path
 
+from app.config import get_settings
+from app.errors import ErrorCode
 from app.formats import FORMATS
 from app.models import FileRecord, JobRecord, JobStatus
 from app.naming import stem_of
@@ -44,7 +47,17 @@ class ProgressReporter:
             save_job_sync(self.job)
 
 
+def _limit_job_memory() -> None:
+    """Cap the RQ work horse (forked per job) so in-process engines can't exhaust the host."""
+    settings = get_settings()
+    if settings.sync_jobs:
+        return  # running inside the API process (tests/dev): don't cap the server itself
+    limit = settings.subprocess_memory_mb * 1024 * 1024
+    resource.setrlimit(resource.RLIMIT_DATA, (limit, limit))
+
+
 def run_conversion(job_id: str) -> None:
+    _limit_job_memory()
     job = get_job_sync(job_id)
     if job is None:
         return  # expired before a worker picked it up
@@ -57,35 +70,35 @@ def run_conversion(job_id: str) -> None:
         _run(job, [r for r in records if r is not None])
         job.status, job.progress = JobStatus.DONE, 100.0
     except CorruptInputError as exc:
-        _fail(job, "corrupted", str(exc))
+        _fail(job, ErrorCode.CORRUPTED, str(exc))
     except (ConversionError, UnsupportedConversion) as exc:
-        _fail(job, "failed", str(exc))
-    except Exception:  # noqa: BLE001 - never leave a job stuck in "running"
+        _fail(job, ErrorCode.FAILED, str(exc))
+    except Exception:
         log.exception("job %s crashed", job_id)
-        _fail(job, "failed", "Something went wrong while converting this file.")
+        _fail(job, ErrorCode.FAILED, "Something went wrong while converting this file.")
     finally:
         save_job_sync(job)
 
 
-def mark_failed(rq_job, connection, exc_type, exc_value, tb) -> None:  # noqa: ANN001, ARG001
+def mark_failed(rq_job, connection, exc_type, exc_value, tb) -> None:
     """RQ on_failure callback (e.g. the work horse was killed by a timeout or OOM)."""
     job = get_job_sync(rq_job.id)
     if job is not None and not job.finished:
-        _fail(job, "failed", "The conversion took too long or ran out of memory.")
+        _fail(job, ErrorCode.FAILED, "The conversion took too long or ran out of memory.")
         save_job_sync(job)
 
 
-def _fail(job: JobRecord, code: str, message: str) -> None:
+def _fail(job: JobRecord, code: ErrorCode, message: str) -> None:
     job.status, job.error_code, job.error = JobStatus.FAILED, code, message
 
 
 def _run(job: JobRecord, records: list[FileRecord]) -> None:
     storage = get_storage()
     first = records[0]
-    stem = stem_of(first.name)
+    merging = len(records) > 1
+    stem = "merged" if merging else stem_of(first.name)
     ext = FORMATS[job.target].extension
 
-    merging = len(records) > 1
     steps = () if merging else get_registry().plan(first.format, job.target, job.options)
     if not merging and not steps:  # same format, nothing to do: hand back the original
         job.output_key, job.output_name = first.key, f"{stem}.{ext}"

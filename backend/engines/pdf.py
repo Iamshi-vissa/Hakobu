@@ -108,9 +108,8 @@ def merge_to_pdf(inputs: Sequence[Path], out: Path, progress: ProgressFn | None 
                     merged.insert_pdf(doc)
             else:
                 try:
-                    with pymupdf.open(path) as image:
-                        with pymupdf.open("pdf", image.convert_to_pdf()) as page_pdf:
-                            merged.insert_pdf(page_pdf)
+                    with pymupdf.open(path) as image, pymupdf.open("pdf", image.convert_to_pdf()) as page_pdf:
+                        merged.insert_pdf(page_pdf)
                 except (pymupdf.FileDataError, RuntimeError) as exc:
                     raise CorruptInputError(f"Could not read image {path.name}.") from exc
             report((index + 1) / len(inputs))

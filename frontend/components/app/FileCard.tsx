@@ -125,7 +125,9 @@ export const FileCard = memo(function FileCard({ item, actions }: FileCardProps)
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {item.mergedFrom ? `Merging ${item.mergedFrom} files` : formatBytes(item.size)}
+            {item.mergedFrom
+              ? `${item.status === "done" ? "Merged" : "Merging"} ${item.mergedFrom} files`
+              : formatBytes(item.size)}
             {item.format && ` · ${item.format.label}`}
           </p>
           <StatusLine item={item} />
