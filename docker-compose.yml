@@ -1,0 +1,55 @@
+name: hakobu
+
+x-backend-env: &backend-env
+  HAKOBU_REDIS_URL: redis://redis:6379/0
+  HAKOBU_DATA_DIR: /data
+  HAKOBU_MAX_UPLOAD_MB: ${HAKOBU_MAX_UPLOAD_MB:-200}
+  HAKOBU_CORS_ORIGINS: '["http://localhost:3000"]'
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    image: hakobu-backend
+    environment: *backend-env
+    volumes: [data:/data]
+    ports: ["8000:8000"]
+    depends_on:
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build: ./backend  # same image as api; the second build is a full cache hit
+    image: hakobu-backend
+    command: ["python3", "-m", "workers.run"]
+    environment:
+      <<: *backend-env
+      HAKOBU_UNOSERVER_INSTANCES: ${HAKOBU_UNOSERVER_INSTANCES:-2}
+    volumes: [data:/data]
+    depends_on:
+      redis: { condition: service_healthy }
+      api: { condition: service_started }
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports: ["3000:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  data:
