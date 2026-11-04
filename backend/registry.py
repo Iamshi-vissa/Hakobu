@@ -13,7 +13,7 @@ from functools import lru_cache
 
 from app.formats import FORMATS, POPULARITY_RANK
 from engines import ALL_ENGINES
-from engines.base import Engine
+from engines.base import ConversionOptions, Engine
 
 MAX_CHAIN_LENGTH = 3
 
@@ -42,9 +42,12 @@ class ConversionRegistry:
     def __init__(self, engines: list[Engine]) -> None:
         # The first engine registered for a pair wins, so list order is priority order.
         self._edges: dict[str, dict[str, Engine]] = {}
+        self._transformers: dict[str, Engine] = {}
         for engine in engines:
             for src, dst in sorted(engine.supported_pairs()):
                 self._edges.setdefault(src, {}).setdefault(dst, engine)
+            for fmt in engine.transforms:
+                self._transformers.setdefault(fmt, engine)
         self._paths: dict[str, dict[str, tuple[Step, ...]]] = {
             src: self._bfs(src) for src in FORMATS
         }
@@ -75,6 +78,13 @@ class ConversionRegistry:
             return self._paths[src][dst]
         except KeyError:
             raise UnsupportedConversion(src, dst) from None
+
+    def plan(self, src: str, dst: str, options: ConversionOptions) -> tuple[Step, ...]:
+        """Steps to run for a job. Same-format jobs are a no-op (the original file is
+        returned) unless options ask for processing an engine can do in place."""
+        if src == dst and options != ConversionOptions() and src in self._transformers:
+            return (Step(src, dst, self._transformers[src]),)
+        return self.path(src, dst)
 
     def targets(self, src: str) -> list[Target]:
         """Reachable targets, most likely choices first."""
