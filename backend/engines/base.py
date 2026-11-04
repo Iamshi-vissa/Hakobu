@@ -67,6 +67,9 @@ class Engine(ABC):
     name: str = "engine"
     #: Pairs whose output may be several files; the registry never chains *from* them.
     terminal_pairs: frozenset[Pair] = frozenset()
+    #: Pairs that only make sense on the original file, never mid-chain (e.g. an image
+    #: that merely passed through GIF shouldn't become a one-frame video).
+    entry_only_pairs: frozenset[Pair] = frozenset()
     #: Formats this engine can re-process into the same format (resize, compress, trim…).
     transforms: frozenset[str] = frozenset()
 

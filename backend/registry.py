@@ -64,9 +64,11 @@ class ConversionRegistry:
                 continue  # multi-output steps can only end a chain
             # Visit popular formats first so ties resolve to sensible intermediates.
             for dst in sorted(self._edges.get(node, {}), key=_rank):
-                if dst not in paths:
-                    paths[dst] = (*path, Step(node, dst, self._edges[node][dst]))
-                    queue.append(dst)
+                engine = self._edges[node][dst]
+                if dst in paths or (path and (node, dst) in engine.entry_only_pairs):
+                    continue
+                paths[dst] = (*path, Step(node, dst, engine))
+                queue.append(dst)
         del paths[source]
         return paths
 

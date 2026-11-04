@@ -18,7 +18,16 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from app.config import get_settings
-from engines.base import ConversionError, run_subprocess
+from engines.base import (
+    ConversionError,
+    ConversionOptions,
+    Engine,
+    Pair,
+    ProgressFn,
+    formats_of,
+    pairs,
+    run_subprocess,
+)
 
 LOCK_DIR = Path(tempfile.gettempdir()) / "hakobu-office"
 SLOT_WAIT_SECONDS = 120
@@ -114,5 +123,39 @@ def _convert_one_shot(
         shutil.move(produced, output_path)
 
 
-def office_available() -> bool:
-    return shutil.which("soffice") is not None
+class OfficeEngine(Engine):
+    """Base for LibreOffice-backed engines; subclasses only declare their formats."""
+
+    INPUTS: tuple[str, ...] = ()
+    OUTPUTS: tuple[str, ...] = ()
+
+    def supported_pairs(self) -> frozenset[Pair]:
+        return pairs(self.INPUTS, self.OUTPUTS)
+
+    def available(self) -> bool:
+        return shutil.which("soffice") is not None
+
+    def convert(
+        self,
+        input_path: Path,
+        output_path: Path,
+        options: ConversionOptions,
+        progress: ProgressFn | None = None,
+    ) -> list[Path]:
+        _, dst = formats_of(input_path, output_path)
+        convert_with_office(input_path, output_path, dst)
+        return [output_path]
+
+
+class SpreadsheetEngine(OfficeEngine):
+    """Workbook ↔ workbook (keeps formatting) and workbooks/CSV → PDF."""
+
+    name = "libreoffice-calc"
+    INPUTS = ("xlsx", "xls", "ods", "csv")
+    OUTPUTS = ("xlsx", "xls", "ods", "pdf")
+
+
+class PresentationEngine(OfficeEngine):
+    name = "libreoffice-impress"
+    INPUTS = ("pptx", "ppt", "odp")
+    OUTPUTS = ("pptx", "ppt", "odp", "pdf")

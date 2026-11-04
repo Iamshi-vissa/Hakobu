@@ -44,6 +44,8 @@ def open_pdf(path: Path) -> pymupdf.Document:
 class PdfEngine(Engine):
     name = "pdf"
     terminal_pairs = frozenset(("pdf", fmt) for fmt in RENDER_TARGETS)
+    # Layout reconstruction only makes sense on real PDFs, not ones produced mid-chain.
+    entry_only_pairs = frozenset({("pdf", "docx"), ("pdf", "txt")})
     transforms = frozenset({"pdf"})
 
     def supported_pairs(self) -> frozenset[Pair]:
