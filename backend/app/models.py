@@ -38,6 +38,7 @@ class TargetInfo(BaseModel):
 class FormatsResponse(BaseModel):
     formats: list[FormatInfo]
     conversions: dict[str, list[TargetInfo]]
+    max_upload_mb: int
 
 
 class FileRecord(BaseModel):
