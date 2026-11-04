@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Header, Response
 
 from app.api.common import target_infos
+from app.config import get_settings
 from app.formats import FORMATS
 from app.models import FormatInfo, FormatsResponse
 from registry import get_registry
@@ -22,6 +23,7 @@ def _matrix() -> tuple[bytes, str]:
     body = FormatsResponse(
         formats=[FormatInfo.of(fid) for fid in FORMATS],
         conversions={src: target_infos(src) for src in get_registry().matrix()},
+        max_upload_mb=get_settings().max_upload_mb,
     ).model_dump_json().encode()
     return body, f'"{hashlib.sha256(body).hexdigest()[:32]}"'
 
