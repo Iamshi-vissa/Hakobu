@@ -5,9 +5,12 @@ detects what the file *really* is from its bytes (not its name), shows only the 
 become, converts it with live progress, and hands back a download — one file at a time or a
 whole batch as a ZIP.
 
-| Light | Dark |
-|---|---|
-| ![Hakobu in light mode: beige page, forest-green buttons, a converted batch of files](docs/screenshot.png) | ![Hakobu in dark mode: deep-forest page with beige text](docs/screenshot-dark.png) |
+| Light | Dark | Mobile |
+|---|---|---|
+| ![Hakobu in light mode: three converted files and a PDF with its grouped target-format menu open](docs/screenshot.png) | ![The same view in dark mode: deep-forest page with beige text](docs/screenshot-dark.png) | ![Hakobu on a phone: two converted files with download buttons](docs/screenshot-mobile.png) |
+
+*A mixed batch: slides, video and an image already converted, and a PDF choosing its target
+from formats grouped by category (multi-step paths are marked "2 steps").*
 
 - **~50 formats, 800+ conversion paths**: images, documents, spreadsheets & data, presentations,
   audio, video, e-books and archives. Missing direct paths are bridged automatically
