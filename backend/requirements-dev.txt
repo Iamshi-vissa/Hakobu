@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest==9.2.0
+httpx2==2.16.0
+fakeredis==2.40.0
+python-pptx==1.0.2
+ruff==0.14.6
