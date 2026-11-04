@@ -7,8 +7,8 @@ import { useTheme } from "@/lib/theme";
 
 const TITLE = "Hakobu — carry your files";
 const ACCENT = "anywhere";
-// ShinyText parses its colours, so it needs literals (indigo-700 / indigo-300: AA on each theme).
-const ACCENT_COLORS = { light: "#4338ca", dark: "#a5b4fc" } as const;
+// ShinyText parses its colours, so it needs literals (forest green / beige: AA on each theme).
+const ACCENT_COLORS = { light: "#2e5e3e", dark: "#d8c9a0" } as const;
 const titleClass = "text-4xl font-bold tracking-tight text-balance sm:text-6xl";
 
 function StaticTitle() {
@@ -42,7 +42,7 @@ export function HeroHeadline() {
           <ShinyText
             text={ACCENT}
             color={ACCENT_COLORS[resolvedTheme]}
-            shineColor={resolvedTheme === "dark" ? "#ffffff" : "#a5b4fc"}
+            shineColor={resolvedTheme === "dark" ? "#fbf7ee" : "#8fc79c"}
             speed={3}
             className="inline-block"
           />

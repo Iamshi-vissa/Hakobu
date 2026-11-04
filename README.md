@@ -12,6 +12,7 @@ whole batch as a ZIP.
   (e.g. PPTX → PDF → PNG).
 - **Fast by default**: stream copy when only the container changes, a warm LibreOffice pool,
   hardware H.264 when available, result caching, and a worker pool sized to your CPUs.
+- **Forest green & beige**: a calm palette in light and dark mode, every text pair WCAG AA.
 - **Built to be safe**: content-based validation, sandboxed conversions with timeouts and memory
   caps, no `shell=True`, macros disabled, archive-bomb and zip-slip guards, and every file deleted
   after an hour.

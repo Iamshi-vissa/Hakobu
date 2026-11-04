@@ -32,7 +32,8 @@ export function UploadZone({ onFiles, maxUploadMb, compact }: UploadZoneProps) {
   return (
     <SpotlightCard
       theme={resolvedTheme}
-      spotlightColor="rgba(99, 102, 241, 0.25)"
+      spotlightColor="rgba(79, 138, 95, 0.28)"
+      style={{ "--spotlight-card-surface": "var(--card)", "--spotlight-card-border": "var(--border)" } as React.CSSProperties}
       className={cn(
         "rounded-2xl border-2 border-dashed transition-colors",
         dragging ? "border-primary bg-primary/5" : "border-border",
@@ -70,7 +71,7 @@ export function UploadZone({ onFiles, maxUploadMb, compact }: UploadZoneProps) {
           <p className="mt-1 text-sm text-muted-foreground">Up to {maxUploadMb} MB per file · any number of files</p>
         </div>
         <span className="inline-block">
-          <ClickSpark sparkColor={["#6366f1", "#22d3ee", "#a855f7"]} sparkCount={10} sparkRadius={26}>
+          <ClickSpark sparkColor={["#2e5e3e", "#6f9e5a", "#d8c9a0"]} sparkCount={10} sparkRadius={26}>
             <span className="inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm">
               Choose files
             </span>

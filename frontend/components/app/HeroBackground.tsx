@@ -8,7 +8,8 @@ import { useTheme } from "@/lib/theme";
 // WebGL background: lazy chunk, client only. Aurora pauses itself while off-screen.
 const Aurora = dynamic(() => import("@/components/reactbits/Aurora"), { ssr: false });
 
-const STOPS = ["#4f46e5", "#22d3ee", "#a855f7"];
+// Forest greens with a warm beige band.
+const STOPS = ["#1f4d2e", "#6f9e5a", "#d8c9a0"];
 
 export function HeroBackground() {
   const reducedMotion = usePrefersReducedMotion();
@@ -26,7 +27,7 @@ export function HeroBackground() {
           amplitude={0.9}
           blend={0.55}
           speed={0.6}
-          opacity={resolvedTheme === "dark" ? 0.7 : 0.45}
+          opacity={resolvedTheme === "dark" ? 0.7 : 0.5}
           lightMode={resolvedTheme === "light"}
           dpr={0.5} // a soft blur: half resolution is indistinguishable and ~4× cheaper
           className="absolute inset-0"
