@@ -5,9 +5,11 @@ from __future__ import annotations
 from engines.base import Engine
 from engines.document import DocumentEngine, PandocEngine
 from engines.image import ImageEngine
+from engines.pdf import PdfEngine
 
 ALL_ENGINES: list[Engine] = [
     ImageEngine(),
     PandocEngine(),
     DocumentEngine(),
+    PdfEngine(),
 ]

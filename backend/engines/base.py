@@ -67,6 +67,8 @@ class Engine(ABC):
     name: str = "engine"
     #: Pairs whose output may be several files; the registry never chains *from* them.
     terminal_pairs: frozenset[Pair] = frozenset()
+    #: Formats this engine can re-process into the same format (resize, compress, trim…).
+    transforms: frozenset[str] = frozenset()
 
     @abstractmethod
     def supported_pairs(self) -> frozenset[Pair]:

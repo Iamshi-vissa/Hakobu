@@ -56,6 +56,7 @@ except (ImportError, OSError):  # libvips missing → Pillow only
 
 class ImageEngine(Engine):
     name = "image"
+    transforms = frozenset(RASTER_OUT)
 
     def supported_pairs(self) -> frozenset[Pair]:
         return pairs(RASTER_IN, RASTER_OUT) | pairs(("svg",), RASTER_OUT)
