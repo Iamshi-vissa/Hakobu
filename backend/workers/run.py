@@ -6,6 +6,7 @@ Run with ``python -m workers.run``.
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import socket
 import subprocess
@@ -17,6 +18,7 @@ from rq.worker_pool import WorkerPool
 
 from app.config import get_settings
 from app.redis_client import get_redis
+from engines.media import H264_ENV, detect_h264_encoder
 from engines.office import profile_uri
 
 log = logging.getLogger("hakobu.worker")
@@ -80,6 +82,9 @@ def main() -> None:
     if settings.unoserver_instances and shutil.which("soffice"):
         _supervise(settings.unoserver_instances)
         log.info("started %d warm LibreOffice instance(s)", settings.unoserver_instances)
+    # Probe hardware encoders once; forked work horses inherit the answer via the env.
+    os.environ[H264_ENV] = detect_h264_encoder()
+    log.info("H.264 encoder: %s", os.environ[H264_ENV])
     log.info("starting %d RQ workers on queue %r", settings.worker_concurrency, settings.queue_name)
     WorkerPool([settings.queue_name], connection=get_redis(),
                num_workers=settings.worker_concurrency).start()

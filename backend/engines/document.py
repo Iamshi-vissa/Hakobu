@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 from engines.base import ConversionOptions, Engine, Pair, ProgressFn, formats_of, pairs, run_subprocess
-from engines.office import convert_with_office, office_available
+from engines.office import OfficeEngine
 
 PANDOC_READERS = {"md": "gfm", "html": "html", "docx": "docx", "odt": "odt"}
 PANDOC_WRITERS = {
@@ -55,26 +55,9 @@ class PandocEngine(Engine):
         return [output_path]
 
 
-class DocumentEngine(Engine):
+class DocumentEngine(OfficeEngine):
     """Word-processor formats via LibreOffice (warm unoserver when available)."""
 
     name = "libreoffice-writer"
     INPUTS = ("docx", "doc", "odt", "rtf", "txt", "html")
     OUTPUTS = ("pdf", "docx", "doc", "odt", "rtf", "txt")
-
-    def supported_pairs(self) -> frozenset[Pair]:
-        return pairs(self.INPUTS, self.OUTPUTS)
-
-    def available(self) -> bool:
-        return office_available()
-
-    def convert(
-        self,
-        input_path: Path,
-        output_path: Path,
-        options: ConversionOptions,
-        progress: ProgressFn | None = None,
-    ) -> list[Path]:
-        _, dst = formats_of(input_path, output_path)
-        convert_with_office(input_path, output_path, dst)
-        return [output_path]
