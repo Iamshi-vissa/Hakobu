@@ -21,10 +21,24 @@ from pathlib import Path
 from typing import IO, BinaryIO
 
 from app.config import get_settings
-from engines.base import ConversionError, ConversionOptions, CorruptInputError, Engine, Pair, ProgressFn, formats_of, pairs
+from engines.base import (
+    ConversionError,
+    ConversionOptions,
+    CorruptInputError,
+    Engine,
+    Pair,
+    ProgressFn,
+    formats_of,
+    pairs,
+)
 
 ARCHIVES = ("zip", "tar", "tar.gz", "7z")
 CHUNK = 1024 * 1024
+ZIP_EPOCH = 315_619_200  # 1980-01-02: ZIP can't store earlier timestamps
+
+
+def _zip_time(mtime: float) -> tuple[int, int, int, int, int, int]:
+    return time.localtime(max(mtime, ZIP_EPOCH))[:6]  # type: ignore[return-value]
 
 
 def safe_name(name: str) -> str | None:
@@ -100,13 +114,13 @@ class ZipWriter(ArchiveWriter):
         self.zip = zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, allowZip64=True, compresslevel=6)
 
     def _add_file(self, name: str, stream: BinaryIO | _Metered, size: int, mtime: float) -> None:
-        info = zipfile.ZipInfo(name, time.localtime(mtime)[:6])
+        info = zipfile.ZipInfo(name, _zip_time(mtime))
         info.compress_type = zipfile.ZIP_DEFLATED
         with self.zip.open(info, "w", force_zip64=True) as dst:
             shutil.copyfileobj(stream, dst, CHUNK)
 
     def _add_dir(self, name: str, mtime: float) -> None:
-        self.zip.writestr(zipfile.ZipInfo(f"{name}/", time.localtime(mtime)[:6]), b"")
+        self.zip.writestr(zipfile.ZipInfo(f"{name}/", _zip_time(mtime)), b"")
 
     def close(self) -> None:
         self.zip.close()
@@ -115,7 +129,7 @@ class ZipWriter(ArchiveWriter):
 class TarWriter(ArchiveWriter):
     def __init__(self, out: Path, gzip: bool) -> None:
         super().__init__(out)
-        self.tar = tarfile.open(out, "w:gz" if gzip else "w", format=tarfile.PAX_FORMAT)
+        self.tar = tarfile.open(out, "w:gz" if gzip else "w", format=tarfile.PAX_FORMAT)  # noqa: SIM115 - closed in close()
 
     def _add_file(self, name: str, stream: BinaryIO | _Metered, size: int, mtime: float) -> None:
         info = tarfile.TarInfo(name)
@@ -227,10 +241,16 @@ def _copy_7z(path: Path, writer: ArchiveWriter, budget: Budget) -> None:
             self.fh.flush()
 
         def size(self) -> int:
-            return self.fh.tell()
+            return self._end()
+
+        def _end(self) -> int:
+            here = self.fh.tell()
+            end = self.fh.seek(0, 2)
+            self.fh.seek(here)
+            return end
 
         def close(self) -> None:
-            size = self.fh.tell()
+            size = self._end()  # py7zr may seek while writing, so tell() isn't the size
             self.fh.seek(0)
             try:
                 writer.add_file(self.name, self.fh, size, self.mtime)

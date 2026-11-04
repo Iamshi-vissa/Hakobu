@@ -52,14 +52,18 @@ EXPORT_FILTERS: dict[str, tuple[str, str]] = {
 }
 
 
-def profile_uri(slot: int) -> str:
-    """Create (once) a macro-disabled LibreOffice profile for ``slot``; return its URI."""
+def profile_dir(slot: int) -> Path:
+    """Create (once) a macro-disabled LibreOffice profile for ``slot``; return its directory."""
     profile = LOCK_DIR / f"profile-{slot}"
     xcu = profile / "user" / "registrymodifications.xcu"
     if not xcu.exists():
         xcu.parent.mkdir(parents=True, exist_ok=True)
         xcu.write_text(_REGISTRY_XCU)
-    return profile.as_uri()
+    return profile
+
+
+def profile_uri(slot: int) -> str:
+    return profile_dir(slot).as_uri()
 
 
 def slot_count() -> int:

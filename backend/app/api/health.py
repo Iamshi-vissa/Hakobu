@@ -18,7 +18,7 @@ TOOLS = ("ffmpeg", "soffice", "pandoc", "ebook-convert", "gs")
 async def health() -> HealthResponse:
     try:
         redis_ok = bool(await get_async_redis().ping())
-    except Exception:  # noqa: BLE001 - any connection failure means "not ready"
+    except Exception:
         redis_ok = False
     tools = {tool: shutil.which(tool) is not None for tool in TOOLS}
     return HealthResponse(status="ok" if redis_ok else "degraded", redis=redis_ok, tools=tools)

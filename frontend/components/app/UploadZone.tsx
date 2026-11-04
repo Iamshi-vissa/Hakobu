@@ -52,7 +52,6 @@ export function UploadZone({ onFiles, maxUploadMb, compact }: UploadZoneProps) {
       <div
         role="button"
         tabIndex={0}
-        aria-label={`Choose files to convert, or drop them here. Up to ${maxUploadMb} MB each.`}
         onClick={openPicker}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {

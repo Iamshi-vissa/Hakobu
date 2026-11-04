@@ -41,7 +41,7 @@ PILLOW_FORMAT = {
 
 # pillow-heif must load its bundled libheif (with the HEVC encoder) before libvips
 # pulls in the system libheif, otherwise HEIC encoding silently disappears.
-from pillow_heif import register_heif_opener
+from pillow_heif import register_heif_opener  # noqa: E402 - must precede the pyvips import
 
 register_heif_opener()
 

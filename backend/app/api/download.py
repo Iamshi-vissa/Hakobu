@@ -48,7 +48,7 @@ async def download_batch(
     def stream() -> Iterator[bytes]:  # sync generator: StreamingResponse runs it in a worker thread
         with ExitStack() as stack:
             paths = [stack.enter_context(storage.local_path(key)) for key in keys]
-            yield from iter_zip(zip(names, paths))
+            yield from iter_zip(zip(names, paths, strict=True))
 
     return StreamingResponse(stream(), media_type="application/zip",
                              headers={"Content-Disposition": _disposition("hakobu-files.zip")})

@@ -16,7 +16,16 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
-from engines.base import ConversionError, ConversionOptions, CorruptInputError, Engine, Pair, ProgressFn, formats_of, pairs
+from engines.base import (
+    ConversionError,
+    ConversionOptions,
+    CorruptInputError,
+    Engine,
+    Pair,
+    ProgressFn,
+    formats_of,
+    pairs,
+)
 
 DATA_FORMATS = ("csv", "tsv", "json", "xml", "yaml")
 WORKBOOKS = ("xlsx", "xls", "ods")
@@ -43,7 +52,7 @@ def _coerce(value: str) -> Any:
     return value
 
 
-def _open_text(path: Path):  # noqa: ANN202 - text file handle
+def _open_text(path: Path):
     """Open text as UTF-8 (BOM tolerated), falling back to Latin-1 for legacy files."""
     with path.open("rb") as probe:
         sample = probe.read(64 * 1024)
@@ -221,12 +230,13 @@ def _write_delimited(out: Path, columns: Columns, rows: Iterable[list[Any]], del
             writer.writerow(["" if v is None else v for v in row])
 
 
+# Rows may be ragged (short CSV lines); zip(strict=False) keeps the cells that exist.
 def _write_json(out: Path, columns: Columns, rows: Iterable[list[Any]]) -> None:
     with out.open("w", encoding="utf-8") as fh:
         fh.write("[")
         for index, row in enumerate(rows):
             fh.write(",\n  " if index else "\n  ")
-            json.dump(dict(zip(columns, row)), fh, ensure_ascii=False, default=str)
+            json.dump(dict(zip(columns, row, strict=False)), fh, ensure_ascii=False, default=str)
         fh.write("\n]\n")
 
 
@@ -237,7 +247,7 @@ def _write_yaml(out: Path, columns: Columns, rows: Iterable[list[Any]]) -> None:
         wrote = False
         for row in rows:
             record = {k: (v if isinstance(v, (int, float, str, bool, type(None))) else str(v))
-                      for k, v in zip(columns, row)}
+                      for k, v in zip(columns, row, strict=False)}
             yaml.safe_dump([record], fh, allow_unicode=True, sort_keys=False)
             wrote = True
         if not wrote:
@@ -255,7 +265,7 @@ def _write_xml(out: Path, columns: Columns, rows: Iterable[list[Any]]) -> None:
         fh.write('<?xml version="1.0" encoding="UTF-8"?>\n<rows>\n')
         for row in rows:
             fields = "".join(
-                f"<{t}>{escape(str(v))}</{t}>" if v is not None else f"<{t}/>" for t, v in zip(tags, row)
+                f"<{t}>{escape(str(v))}</{t}>" if v is not None else f"<{t}/>" for t, v in zip(tags, row, strict=False)
             )
             fh.write(f"  <row>{fields}</row>\n")
         fh.write("</rows>\n")

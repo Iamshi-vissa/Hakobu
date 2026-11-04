@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import resource
@@ -145,7 +146,7 @@ def run_subprocess(
     memory_mb = memory_mb or settings.subprocess_memory_mb
     tool = Path(str(args[0])).name
     with tempfile.TemporaryFile() as stderr:
-        proc = subprocess.Popen(  # noqa: S603 - argv list, no shell
+        proc = subprocess.Popen(
             [str(a) for a in args],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if on_line else subprocess.DEVNULL,
@@ -154,16 +155,14 @@ def run_subprocess(
             env=env,
             text=bool(on_line),
             start_new_session=True,  # own process group so a timeout kills children too
-            preexec_fn=_limit_memory(memory_mb),  # noqa: PLW1509 - workers are single-threaded here
+            preexec_fn=_limit_memory(memory_mb),
         )
         timed_out = threading.Event()
 
         def kill() -> None:
             timed_out.set()
-            try:
+            with contextlib.suppress(ProcessLookupError):
                 os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
 
         timer = threading.Timer(timeout, kill)
         timer.start()

@@ -37,8 +37,8 @@ class Storage(ABC):
         """Stream an object's bytes."""
 
     @abstractmethod
-    def read_head(self, key: str, n: int) -> bytes:
-        """Return the first ``n`` bytes of an object."""
+    def read_range(self, key: str, offset: int, n: int) -> bytes:
+        """Return up to ``n`` bytes of an object starting at ``offset``."""
 
     @abstractmethod
     @contextmanager
@@ -95,8 +95,9 @@ class LocalStorage(Storage):
             while chunk := await fh.read(chunk_size):
                 yield chunk
 
-    def read_head(self, key: str, n: int) -> bytes:
+    def read_range(self, key: str, offset: int, n: int) -> bytes:
         with self._path(key).open("rb") as fh:
+            fh.seek(offset)
             return fh.read(n)
 
     @contextmanager

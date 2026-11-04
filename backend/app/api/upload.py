@@ -29,13 +29,13 @@ from app.api.common import target_infos
 from app.config import get_settings
 from app.detection import HEAD_SIZE, detect
 from app.errors import ApiError, ErrorCode
+from app.formats import FORMATS
 from app.models import FileRecord, FormatInfo, UploadProgress, UploadResponse
 from app.naming import checked_id, new_id, sanitize_filename
 from app.ratelimit import rate_limit
 from app.redis_client import get_async_redis
 from app.storage import StorageLimitExceeded, get_storage
 from app.store import save_file
-from app.formats import FORMATS
 
 router = APIRouter()
 
@@ -145,10 +145,10 @@ async def upload(
 async def _finalize(incoming: str, name: str) -> UploadResponse:
     storage = get_storage()
     try:
-        head = storage.read_head(incoming, HEAD_SIZE)
+        head = storage.read_range(incoming, 0, HEAD_SIZE)
         if not head:
             raise ApiError(400, ErrorCode.INVALID_REQUEST, "The file is empty.")
-        detection = detect(head, name)
+        detection = detect(head, name, read_at=lambda offset, n: storage.read_range(incoming, offset, n))
         if detection.format is None:
             raise ApiError(415, ErrorCode.UNSUPPORTED_FORMAT,
                            "Hakobu doesn't recognise this file type.", mime=detection.mime)
