@@ -119,7 +119,12 @@ class JobResponse(BaseModel):
     @classmethod
     def of(cls, job: JobRecord) -> JobResponse:
         return cls(
-            job_id=job.id, status=job.status, progress=round(job.progress, 1),
-            error_code=job.error_code, error=job.error, output_name=job.output_name,
-            output_size=job.output_size, output_count=job.output_count,
+            job_id=job.id,
+            status=job.status,
+            progress=round(job.progress, 1),
+            error_code=job.error_code,
+            error=job.error,
+            output_name=job.output_name,
+            output_size=job.output_size,
+            output_count=job.output_count,
         )

@@ -31,6 +31,9 @@ async def rate_limit(request: Request) -> None:
     count, _ = await pipe.execute()
     if count > limit:
         retry_after = WINDOW_SECONDS - int(time.time()) % WINDOW_SECONDS
-        raise ApiError(429, ErrorCode.RATE_LIMITED,
-                       "Too many requests — please slow down and try again shortly.",
-                       retry_after=retry_after)
+        raise ApiError(
+            429,
+            ErrorCode.RATE_LIMITED,
+            "Too many requests — please slow down and try again shortly.",
+            retry_after=retry_after,
+        )

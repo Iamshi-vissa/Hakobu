@@ -10,11 +10,38 @@ from pathlib import Path
 
 CHUNK = 1024 * 1024
 # Already-compressed formats are stored; everything else gets fast deflate.
-_STORED_SUFFIXES = frozenset({
-    ".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".heic", ".mp3", ".m4a", ".aac",
-    ".ogg", ".opus", ".flac", ".mp4", ".mov", ".mkv", ".webm", ".zip", ".gz", ".7z",
-    ".docx", ".xlsx", ".pptx", ".odt", ".ods", ".odp", ".epub", ".pdf",
-})
+_STORED_SUFFIXES = frozenset(
+    {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+        ".avif",
+        ".heic",
+        ".mp3",
+        ".m4a",
+        ".aac",
+        ".ogg",
+        ".opus",
+        ".flac",
+        ".mp4",
+        ".mov",
+        ".mkv",
+        ".webm",
+        ".zip",
+        ".gz",
+        ".7z",
+        ".docx",
+        ".xlsx",
+        ".pptx",
+        ".odt",
+        ".ods",
+        ".odp",
+        ".epub",
+        ".pdf",
+    }
+)
 
 
 class _Sink(io.RawIOBase):

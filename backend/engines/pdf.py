@@ -155,11 +155,21 @@ def _transform(src: Path, out: Path, options: ConversionOptions, report: Progres
 
 def _compress(src: Path, out: Path) -> None:
     if shutil.which("gs"):
-        run_subprocess([
-            "gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-dQUIET", "-sDEVICE=pdfwrite",
-            "-dCompatibilityLevel=1.5", "-dPDFSETTINGS=/ebook", "-dDetectDuplicateImages=true",
-            f"-sOutputFile={out}", src,
-        ])
+        run_subprocess(
+            [
+                "gs",
+                "-dSAFER",
+                "-dBATCH",
+                "-dNOPAUSE",
+                "-dQUIET",
+                "-sDEVICE=pdfwrite",
+                "-dCompatibilityLevel=1.5",
+                "-dPDFSETTINGS=/ebook",
+                "-dDetectDuplicateImages=true",
+                f"-sOutputFile={out}",
+                src,
+            ]
+        )
     else:
         with open_pdf(src) as doc:
             doc.save(out, garbage=4, deflate=True, deflate_images=True, clean=True)

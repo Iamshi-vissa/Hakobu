@@ -47,6 +47,7 @@ def job_event(job: JobRecord) -> str:
 
 # ---- async (API) ----
 
+
 async def save_file(record: FileRecord) -> None:
     await get_async_redis().set(file_key(record.id), record.model_dump_json(), ex=_ttl())
 
@@ -70,6 +71,7 @@ async def cached_job_id(cache_key: str) -> str | None:
 
 
 # ---- sync (workers) ----
+
 
 def get_file_sync(file_id: str) -> FileRecord | None:
     return _load(FileRecord, get_redis().get(file_key(file_id)))

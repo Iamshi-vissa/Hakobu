@@ -20,7 +20,8 @@ def get_queue() -> Queue:
 def _enqueue(job_id: str) -> None:
     settings = get_settings()
     get_queue().enqueue(
-        run_conversion, job_id,
+        run_conversion,
+        job_id,
         job_id=job_id,
         job_timeout=settings.job_timeout_seconds,
         result_ttl=0,  # results live in our own job record

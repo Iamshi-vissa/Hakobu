@@ -59,9 +59,18 @@ AUDIO_CODECS: dict[str, frozenset[str] | None] = {
 }
 # Encoders used when a stream must be re-encoded.
 AUDIO_ENCODER = {
-    "mp3": "libmp3lame", "wav": "pcm_s16le", "aac": "aac", "m4a": "aac", "ogg": "libvorbis",
-    "flac": "flac", "opus": "libopus", "mp4": "aac", "mov": "aac", "mkv": "aac",
-    "webm": "libopus", "avi": "libmp3lame",
+    "mp3": "libmp3lame",
+    "wav": "pcm_s16le",
+    "aac": "aac",
+    "m4a": "aac",
+    "ogg": "libvorbis",
+    "flac": "flac",
+    "opus": "libopus",
+    "mp4": "aac",
+    "mov": "aac",
+    "mkv": "aac",
+    "webm": "libopus",
+    "avi": "libmp3lame",
 }
 LOSSLESS_AUDIO = frozenset({"wav", "flac"})
 GIF_DEFAULT_WIDTH = 480
@@ -79,7 +88,9 @@ def probe(path: Path) -> Probe:
     try:
         result = subprocess.run(
             ["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", str(path)],
-            capture_output=True, timeout=PROBE_TIMEOUT, check=True,
+            capture_output=True,
+            timeout=PROBE_TIMEOUT,
+            check=True,
         )
         info = json.loads(result.stdout)
     except (subprocess.SubprocessError, json.JSONDecodeError) as exc:
@@ -114,12 +125,20 @@ H264_ENCODERS: dict[str, VideoEncoder] = {
     "libx264": VideoEncoder(("-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p"), ("-crf", "23")),
     "h264_nvenc": VideoEncoder(("-c:v", "h264_nvenc", "-preset", "p4"), ("-cq", "23")),
     "h264_qsv": VideoEncoder(("-c:v", "h264_qsv", "-preset", "veryfast"), ("-global_quality", "23")),
-    "h264_vaapi": VideoEncoder(("-c:v", "h264_vaapi",), ("-qp", "23"), ("format=nv12", "hwupload"),
-                               ("-vaapi_device", "/dev/dri/renderD128")),
+    "h264_vaapi": VideoEncoder(
+        (
+            "-c:v",
+            "h264_vaapi",
+        ),
+        ("-qp", "23"),
+        ("format=nv12", "hwupload"),
+        ("-vaapi_device", "/dev/dri/renderD128"),
+    ),
 }
 OTHER_ENCODERS: dict[str, VideoEncoder] = {
-    "webm": VideoEncoder(("-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-row-mt", "1"),
-                         ("-crf", "33", "-b:v", "0")),
+    "webm": VideoEncoder(
+        ("-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-row-mt", "1"), ("-crf", "33", "-b:v", "0")
+    ),
     "avi": VideoEncoder(("-c:v", "mpeg4"), ("-q:v", "4")),
 }
 
@@ -128,9 +147,27 @@ def _encoder_works(encoder: VideoEncoder) -> bool:
     filters = ["-vf", ",".join(encoder.filters)] if encoder.filters else []
     try:
         subprocess.run(
-            ["ffmpeg", "-hide_banner", "-loglevel", "error", *encoder.device, "-f", "lavfi",
-             "-i", "color=s=256x256:d=0.2", "-frames:v", "2", *filters, *encoder.codec, "-f", "null", "-"],
-            capture_output=True, timeout=20, check=True,
+            [
+                "ffmpeg",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                *encoder.device,
+                "-f",
+                "lavfi",
+                "-i",
+                "color=s=256x256:d=0.2",
+                "-frames:v",
+                "2",
+                *filters,
+                *encoder.codec,
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            timeout=20,
+            check=True,
         )
         return True
     except (subprocess.SubprocessError, OSError):
@@ -186,9 +223,16 @@ def build_command(src_path: Path, out: Path, src: str, dst: str, info: Probe, op
 
     if dst == "gif":
         width = options.width or GIF_DEFAULT_WIDTH
-        args += ["-an", "-vf", (f"fps={GIF_FPS},scale='min({width},iw)':-2:flags=lanczos,"
-                                "split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer"),
-                 "-loop", "0"]
+        args += [
+            "-an",
+            "-vf",
+            (
+                f"fps={GIF_FPS},scale='min({width},iw)':-2:flags=lanczos,"
+                "split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer"
+            ),
+            "-loop",
+            "0",
+        ]
     elif dst in AUDIO:
         if info.audio is None:
             raise ConversionError("This file has no audio track to extract.")

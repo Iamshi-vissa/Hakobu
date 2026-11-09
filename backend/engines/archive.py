@@ -85,6 +85,7 @@ class _Metered:
 
 # ---------- writers ----------
 
+
 class ArchiveWriter(ABC):
     def __init__(self, out: Path) -> None:
         self.out = out
@@ -181,6 +182,7 @@ def open_writer(fmt: str, out: Path) -> ArchiveWriter:
 
 
 # ---------- readers ----------
+
 
 def _copy_zip(path: Path, writer: ArchiveWriter, budget: Budget) -> None:
     with zipfile.ZipFile(path) as archive:

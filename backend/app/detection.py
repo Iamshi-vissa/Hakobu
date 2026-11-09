@@ -39,16 +39,32 @@ _OLE_STREAMS = {
     "PowerPoint Document".encode("utf-16-le"): "ppt",
 }
 _FTYP_BRANDS = {
-    b"heic": "heic", b"heix": "heic", b"hevc": "heic", b"heim": "heic", b"heis": "heic",
-    b"hevx": "heic", b"mif1": "heic", b"msf1": "heic",
-    b"avif": "avif", b"avis": "avif",
-    b"M4A ": "m4a", b"M4B ": "m4a", b"M4P ": "m4a",
+    b"heic": "heic",
+    b"heix": "heic",
+    b"hevc": "heic",
+    b"heim": "heic",
+    b"heis": "heic",
+    b"hevx": "heic",
+    b"mif1": "heic",
+    b"msf1": "heic",
+    b"avif": "avif",
+    b"avis": "avif",
+    b"M4A ": "m4a",
+    b"M4B ": "m4a",
+    b"M4P ": "m4a",
     b"qt  ": "mov",
 }
 _MIME_FALLBACK = {f.mime: f.id for f in FORMATS.values()}
 # ELF, PE (MZ), Mach-O (32/64-bit, both endians) and fat binaries are never accepted.
-_EXECUTABLE_MAGIC = (b"\x7fELF", b"MZ", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe",
-                     b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe")
+_EXECUTABLE_MAGIC = (
+    b"\x7fELF",
+    b"MZ",
+    b"\xfe\xed\xfa\xce",
+    b"\xfe\xed\xfa\xcf",
+    b"\xce\xfa\xed\xfe",
+    b"\xcf\xfa\xed\xfe",
+    b"\xca\xfe\xba\xbe",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,7 +146,7 @@ def _detect_binary(h: bytes, hint: str | None, read_at: ReadAt | None) -> str | 
 def _detect_ftyp(h: bytes, hint: str | None) -> str:
     box_size = int.from_bytes(h[:4], "big")
     major = h[8:12]
-    compatible = [h[i:i + 4] for i in range(16, min(box_size, len(h), 64), 4)]
+    compatible = [h[i : i + 4] for i in range(16, min(box_size, len(h), 64), 4)]
     # AVIF files usually use the generic "mif1" major brand with "avif" as compatible brand.
     if b"avif" in compatible or b"avis" in compatible:
         return "avif"

@@ -33,13 +33,22 @@ def _start_unoserver(slot: int) -> subprocess.Popen[bytes]:
     port = settings.unoserver_base_port + slot
     return subprocess.Popen(
         [
-            sys.executable, "-m", "unoserver.server",
-            "--interface", settings.unoserver_host, "--port", str(port),
-            "--uno-port", str(port + UNO_PORT_OFFSET),
-            "--user-installation", str(profile_dir(slot)),  # unoserver builds the URI itself
-            "--conversion-timeout", str(settings.subprocess_timeout_seconds),
+            sys.executable,
+            "-m",
+            "unoserver.server",
+            "--interface",
+            settings.unoserver_host,
+            "--port",
+            str(port),
+            "--uno-port",
+            str(port + UNO_PORT_OFFSET),
+            "--user-installation",
+            str(profile_dir(slot)),  # unoserver builds the URI itself
+            "--conversion-timeout",
+            str(settings.subprocess_timeout_seconds),
             # Recycle LibreOffice periodically to contain leaks; the supervisor restarts it.
-            "--stop-after", str(RECYCLE_AFTER),
+            "--stop-after",
+            str(RECYCLE_AFTER),
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -86,8 +95,7 @@ def main() -> None:
     os.environ[H264_ENV] = detect_h264_encoder()
     log.info("H.264 encoder: %s", os.environ[H264_ENV])
     log.info("starting %d RQ workers on queue %r", settings.worker_concurrency, settings.queue_name)
-    WorkerPool([settings.queue_name], connection=get_redis(),
-               num_workers=settings.worker_concurrency).start()
+    WorkerPool([settings.queue_name], connection=get_redis(), num_workers=settings.worker_concurrency).start()
 
 
 if __name__ == "__main__":

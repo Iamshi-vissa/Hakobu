@@ -54,14 +54,16 @@ def test_legacy_workbooks_to_json(samples, tmp_path, src: str) -> None:
 
 def test_xml_entities_are_not_expanded(tmp_path) -> None:
     evil = tmp_path / "evil.xml"
-    evil.write_text('<?xml version="1.0"?><!DOCTYPE r [<!ENTITY x SYSTEM "file:///etc/passwd">]>'
-                    "<r><row><a>&x;</a></row></r>")
+    evil.write_text(
+        '<?xml version="1.0"?><!DOCTYPE r [<!ENTITY x SYSTEM "file:///etc/passwd">]><r><row><a>&x;</a></row></r>'
+    )
     [out] = convert(ENGINE, evil, "json", tmp_path)
     assert "root:" not in out.read_text()
 
 
-@pytest.mark.parametrize(("name", "content"), [("bad.json", "{not json"), ("bad.yaml", "a: [unclosed"),
-                                               ("bad.xml", "<a><b></a>")])
+@pytest.mark.parametrize(
+    ("name", "content"), [("bad.json", "{not json"), ("bad.yaml", "a: [unclosed"), ("bad.xml", "<a><b></a>")]
+)
 def test_corrupted_inputs(tmp_path, name: str, content: str) -> None:
     src = tmp_path / name
     src.write_text(content)

@@ -44,8 +44,13 @@ FORMATS: dict[str, Format] = {
         Format("svg", "SVG", _C.IMAGE, "svg", "image/svg+xml"),
         # Documents
         Format("pdf", "PDF", _C.DOCUMENT, "pdf", "application/pdf"),
-        Format("docx", "Word (DOCX)", _C.DOCUMENT, "docx",
-               "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+        Format(
+            "docx",
+            "Word (DOCX)",
+            _C.DOCUMENT,
+            "docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ),
         Format("doc", "Word 97 (DOC)", _C.DOCUMENT, "doc", "application/msword"),
         Format("odt", "OpenDocument Text", _C.DOCUMENT, "odt", "application/vnd.oasis.opendocument.text"),
         Format("rtf", "Rich Text", _C.DOCUMENT, "rtf", "application/rtf"),
@@ -53,8 +58,13 @@ FORMATS: dict[str, Format] = {
         Format("html", "HTML", _C.DOCUMENT, "html", "text/html", ("htm", "xhtml")),
         Format("md", "Markdown", _C.DOCUMENT, "md", "text/markdown", ("markdown",)),
         # Spreadsheets & data
-        Format("xlsx", "Excel (XLSX)", _C.SPREADSHEET, "xlsx",
-               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        Format(
+            "xlsx",
+            "Excel (XLSX)",
+            _C.SPREADSHEET,
+            "xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
         Format("xls", "Excel 97 (XLS)", _C.SPREADSHEET, "xls", "application/vnd.ms-excel"),
         Format("ods", "OpenDocument Sheet", _C.SPREADSHEET, "ods", "application/vnd.oasis.opendocument.spreadsheet"),
         Format("csv", "CSV", _C.SPREADSHEET, "csv", "text/csv"),
@@ -63,11 +73,15 @@ FORMATS: dict[str, Format] = {
         Format("xml", "XML", _C.SPREADSHEET, "xml", "application/xml"),
         Format("yaml", "YAML", _C.SPREADSHEET, "yaml", "application/yaml", ("yml",)),
         # Presentations
-        Format("pptx", "PowerPoint (PPTX)", _C.PRESENTATION, "pptx",
-               "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+        Format(
+            "pptx",
+            "PowerPoint (PPTX)",
+            _C.PRESENTATION,
+            "pptx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ),
         Format("ppt", "PowerPoint 97 (PPT)", _C.PRESENTATION, "ppt", "application/vnd.ms-powerpoint"),
-        Format("odp", "OpenDocument Slides", _C.PRESENTATION, "odp",
-               "application/vnd.oasis.opendocument.presentation"),
+        Format("odp", "OpenDocument Slides", _C.PRESENTATION, "odp", "application/vnd.oasis.opendocument.presentation"),
         # Audio
         Format("mp3", "MP3", _C.AUDIO, "mp3", "audio/mpeg"),
         Format("wav", "WAV", _C.AUDIO, "wav", "audio/wav"),
@@ -95,17 +109,58 @@ FORMATS: dict[str, Format] = {
 }
 
 # Extension (lower-case, no dot) -> format id.
-EXTENSION_MAP: dict[str, str] = {
-    ext: f.id for f in FORMATS.values() for ext in (f.extension, *f.aliases)
-}
+EXTENSION_MAP: dict[str, str] = {ext: f.id for f in FORMATS.values() for ext in (f.extension, *f.aliases)}
 
 # Global popularity used to order targets ("most likely choices first").
 POPULARITY: tuple[str, ...] = (
-    "pdf", "jpg", "png", "webp", "docx", "mp4", "mp3", "xlsx", "csv", "zip",
-    "gif", "txt", "md", "html", "epub", "wav", "m4a", "json", "avif", "pptx",
-    "heic", "mov", "webm", "flac", "ogg", "opus", "aac", "mkv", "odt", "ods",
-    "odp", "rtf", "tiff", "bmp", "ico", "yaml", "xml", "tsv", "tar.gz", "7z",
-    "tar", "mobi", "azw3", "doc", "xls", "ppt", "avi", "svg",
+    "pdf",
+    "jpg",
+    "png",
+    "webp",
+    "docx",
+    "mp4",
+    "mp3",
+    "xlsx",
+    "csv",
+    "zip",
+    "gif",
+    "txt",
+    "md",
+    "html",
+    "epub",
+    "wav",
+    "m4a",
+    "json",
+    "avif",
+    "pptx",
+    "heic",
+    "mov",
+    "webm",
+    "flac",
+    "ogg",
+    "opus",
+    "aac",
+    "mkv",
+    "odt",
+    "ods",
+    "odp",
+    "rtf",
+    "tiff",
+    "bmp",
+    "ico",
+    "yaml",
+    "xml",
+    "tsv",
+    "tar.gz",
+    "7z",
+    "tar",
+    "mobi",
+    "azw3",
+    "doc",
+    "xls",
+    "ppt",
+    "avi",
+    "svg",
 )
 POPULARITY_RANK: dict[str, int] = {fmt: i for i, fmt in enumerate(POPULARITY)}
 

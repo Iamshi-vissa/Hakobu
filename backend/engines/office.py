@@ -99,9 +99,15 @@ def convert_with_office(input_path: Path, output_path: Path, target_ext: str) ->
     with _claim_slot() as slot:
         if settings.unoserver_instances:
             args: list[str | Path] = [
-                "unoconvert", "--host", settings.unoserver_host,
-                "--port", str(settings.unoserver_base_port + slot),
-                "--host-location", "local", "--convert-to", target_ext,
+                "unoconvert",
+                "--host",
+                settings.unoserver_host,
+                "--port",
+                str(settings.unoserver_base_port + slot),
+                "--host-location",
+                "local",
+                "--convert-to",
+                target_ext,
             ]
             if export_filter:
                 args += ["--output-filter", export_filter[0], "--filter-option", export_filter[1]]
@@ -111,16 +117,30 @@ def convert_with_office(input_path: Path, output_path: Path, target_ext: str) ->
 
 
 def _convert_one_shot(
-    input_path: Path, output_path: Path, target_ext: str,
-    export_filter: tuple[str, str] | None, slot: int,
+    input_path: Path,
+    output_path: Path,
+    target_ext: str,
+    export_filter: tuple[str, str] | None,
+    slot: int,
 ) -> None:
     convert_to = f"{target_ext}:{export_filter[0]}:{export_filter[1]}" if export_filter else target_ext
     with tempfile.TemporaryDirectory() as outdir:
-        run_subprocess([
-            "soffice", f"-env:UserInstallation={profile_uri(slot)}",
-            "--headless", "--norestore", "--nolockcheck", "--nodefault", "--nologo",
-            "--convert-to", convert_to, "--outdir", outdir, input_path,
-        ])
+        run_subprocess(
+            [
+                "soffice",
+                f"-env:UserInstallation={profile_uri(slot)}",
+                "--headless",
+                "--norestore",
+                "--nolockcheck",
+                "--nodefault",
+                "--nologo",
+                "--convert-to",
+                convert_to,
+                "--outdir",
+                outdir,
+                input_path,
+            ]
+        )
         produced = Path(outdir) / f"{input_path.stem}.{target_ext}"
         if not produced.exists():
             raise ConversionError("LibreOffice could not convert this file.")

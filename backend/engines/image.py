@@ -35,8 +35,15 @@ ICO_MAX = 256
 ICO_SIZES = (16, 32, 48, 64, 128, 256)
 DEFAULT_QUALITY = 85
 PILLOW_FORMAT = {
-    "png": "PNG", "jpg": "JPEG", "webp": "WEBP", "gif": "GIF", "bmp": "BMP",
-    "tiff": "TIFF", "heic": "HEIF", "avif": "AVIF", "ico": "ICO",
+    "png": "PNG",
+    "jpg": "JPEG",
+    "webp": "WEBP",
+    "gif": "GIF",
+    "bmp": "BMP",
+    "tiff": "TIFF",
+    "heic": "HEIF",
+    "avif": "AVIF",
+    "ico": "ICO",
 }
 
 # pillow-heif must load its bundled libheif (with the HEVC encoder) before libvips
@@ -87,8 +94,7 @@ def _rasterize_svg(path: Path, out: Path, options: ConversionOptions) -> Path:
 
     try:
         # unsafe=False (default) blocks external entity and file references.
-        cairosvg.svg2png(url=str(path), write_to=str(out),
-                         output_width=options.width, output_height=options.height)
+        cairosvg.svg2png(url=str(path), write_to=str(out), output_width=options.width, output_height=options.height)
     except Exception as exc:  # cairosvg raises many parser-specific types
         raise CorruptInputError("This SVG could not be read.") from exc
     return out
@@ -99,8 +105,11 @@ def _convert_vips(src_path: Path, out: Path, src: str, dst: str, options: Conver
     if options.width or options.height:
         # thumbnail() shrinks on load, the cheapest way to resize.
         image = pyvips.Image.thumbnail(
-            str(src_path), options.width or 100_000, height=options.height or 100_000,
-            size="down", option_string="n=-1" if animated else "",
+            str(src_path),
+            options.width or 100_000,
+            height=options.height or 100_000,
+            size="down",
+            option_string="n=-1" if animated else "",
         )
     else:
         image = pyvips.Image.new_from_file(str(src_path), access="sequential", **({"n": -1} if animated else {}))

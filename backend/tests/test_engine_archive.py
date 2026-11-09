@@ -39,8 +39,10 @@ def test_round_trip_preserves_bytes(samples, tmp_path, src: str, dst: str) -> No
     assert _contents(out, dst) == EXPECTED
 
 
-@pytest.mark.parametrize(("raw", "clean"), [("../../etc/passwd", None), ("/abs/file", "abs/file"),
-                                            ("a/./b//c", "a/b/c"), ("..", None), ("ok.txt", "ok.txt")])
+@pytest.mark.parametrize(
+    ("raw", "clean"),
+    [("../../etc/passwd", None), ("/abs/file", "abs/file"), ("a/./b//c", "a/b/c"), ("..", None), ("ok.txt", "ok.txt")],
+)
 def test_safe_name(raw: str, clean: str | None) -> None:
     assert safe_name(raw) == clean
 
