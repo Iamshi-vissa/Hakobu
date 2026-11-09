@@ -15,13 +15,15 @@ import pytest
 
 # Configure before any app module reads settings.
 _DATA_DIR = Path(tempfile.mkdtemp(prefix="hakobu-test-"))
-os.environ.update({
-    "HAKOBU_DATA_DIR": str(_DATA_DIR),
-    "HAKOBU_SYNC_JOBS": "1",
-    "HAKOBU_RATE_LIMIT_PER_MINUTE": "10000",
-    "HAKOBU_UNOSERVER_INSTANCES": "0",
-    "HAKOBU_FFMPEG_HWACCEL": "off",
-})
+os.environ.update(
+    {
+        "HAKOBU_DATA_DIR": str(_DATA_DIR),
+        "HAKOBU_SYNC_JOBS": "1",
+        "HAKOBU_RATE_LIMIT_PER_MINUTE": "10000",
+        "HAKOBU_UNOSERVER_INSTANCES": "0",
+        "HAKOBU_FFMPEG_HWACCEL": "off",
+    }
+)
 
 import fakeredis  # noqa: E402
 import fakeredis.aioredis  # noqa: E402
@@ -41,8 +43,7 @@ def requires(*tools: str) -> pytest.MarkDecorator:
 @pytest.fixture(autouse=True)
 def fake_redis() -> Iterator[None]:
     server = fakeredis.FakeServer()
-    set_clients(fakeredis.FakeRedis(server=server),
-                fakeredis.aioredis.FakeRedis(server=server, decode_responses=True))
+    set_clients(fakeredis.FakeRedis(server=server), fakeredis.aioredis.FakeRedis(server=server, decode_responses=True))
     yield
 
 
@@ -57,6 +58,7 @@ def client() -> Iterator:
 
 
 # ---------- sample files ----------
+
 
 def _run(*args: str | Path) -> None:
     subprocess.run([str(a) for a in args], check=True, capture_output=True, timeout=180)
@@ -115,7 +117,7 @@ def _pptx(path: Path) -> None:
 
 
 MARKDOWN = "# Hakobu\n\nCarry your files *anywhere*.\n\n- one\n- two\n"
-CSV = "name,age,city\nAda,36,London\nLinus,28,Helsinki\n\"Smith, J\",,Paris\n"
+CSV = 'name,age,city\nAda,36,London\nLinus,28,Helsinki\n"Smith, J",,Paris\n'
 
 
 class Samples:
@@ -125,8 +127,10 @@ class Samples:
         self.root = root
         self.builders: dict[str, Callable[[Path], None]] = {
             **{fmt: _image(fmt) for fmt in ("png", "jpg", "webp", "gif", "bmp", "tiff", "heic", "avif", "ico")},
-            "svg": lambda p: p.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60">'
-                                          '<rect width="120" height="60" fill="teal"/></svg>'),
+            "svg": lambda p: p.write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60">'
+                '<rect width="120" height="60" fill="teal"/></svg>'
+            ),
             "md": lambda p: p.write_text(MARKDOWN),
             "txt": lambda p: p.write_text("Plain text from Hakobu.\nSecond line.\n"),
             "html": lambda p: p.write_text("<!doctype html><html><body><h1>Hakobu</h1><p>Hello</p></body></html>"),
@@ -139,8 +143,10 @@ class Samples:
             "tsv": lambda p: p.write_text(CSV.replace(",", "\t").replace('"Smith\t J"', "Smith, J")),
             "json": lambda p: p.write_text('[{"name": "Ada", "age": 36}, {"name": "Linus", "age": 28}]'),
             "yaml": lambda p: p.write_text("- name: Ada\n  age: 36\n- name: Linus\n  age: 28\n"),
-            "xml": lambda p: p.write_text("<people><person><name>Ada</name><age>36</age></person>"
-                                          "<person><name>Linus</name><age>28</age></person></people>"),
+            "xml": lambda p: p.write_text(
+                "<people><person><name>Ada</name><age>36</age></person>"
+                "<person><name>Linus</name><age>28</age></person></people>"
+            ),
             "xlsx": _xlsx,
             "pptx": _pptx,
             "doc": lambda p: self._office(self.get("docx"), p),
@@ -151,9 +157,26 @@ class Samples:
             "wav": lambda p: _run("ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=2", p),
             "mp3": lambda p: _run("ffmpeg", "-v", "error", "-i", self.get("wav"), "-c:a", "libmp3lame", p),
             "mp4": lambda p: _run(
-                "ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc=size=160x120:rate=15:duration=2",
-                "-f", "lavfi", "-i", "sine=duration=2", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                "-c:a", "aac", "-shortest", p),
+                "ffmpeg",
+                "-v",
+                "error",
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=160x120:rate=15:duration=2",
+                "-f",
+                "lavfi",
+                "-i",
+                "sine=duration=2",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-c:a",
+                "aac",
+                "-shortest",
+                p,
+            ),
             "mobi": lambda p: _run("ebook-convert", self.get("epub"), p),
             "zip": self._zip,
             "tar": lambda p: self._tar(p, "w"),

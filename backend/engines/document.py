@@ -10,8 +10,13 @@ from engines.office import OfficeEngine
 
 PANDOC_READERS = {"md": "gfm", "html": "html", "docx": "docx", "odt": "odt"}
 PANDOC_WRITERS = {
-    "md": "gfm", "html": "html5", "docx": "docx", "odt": "odt",
-    "rtf": "rtf", "txt": "plain", "epub": "epub3",
+    "md": "gfm",
+    "html": "html5",
+    "docx": "docx",
+    "odt": "odt",
+    "rtf": "rtf",
+    "txt": "plain",
+    "epub": "epub3",
 }
 STANDALONE = frozenset({"html", "rtf", "epub"})
 # Writers that run under --sandbox with distro Pandoc builds (docx/odt/epub need data files
@@ -43,9 +48,17 @@ class PandocEngine(Engine):
     ) -> list[Path]:
         src, dst = formats_of(input_path, output_path)
         args: list[str | Path] = [
-            "pandoc", "-f", PANDOC_READERS[src], "-t", PANDOC_WRITERS[dst],
-            "--lua-filter", SAFE_FILTER, "--metadata", f"pagetitle={input_path.stem}",
-            "-o", output_path,
+            "pandoc",
+            "-f",
+            PANDOC_READERS[src],
+            "-t",
+            PANDOC_WRITERS[dst],
+            "--lua-filter",
+            SAFE_FILTER,
+            "--metadata",
+            f"pagetitle={input_path.stem}",
+            "-o",
+            output_path,
         ]
         if dst in SANDBOXED_WRITERS:
             args.append("--sandbox")

@@ -35,9 +35,13 @@ async def _from_cache(cache_key: str, record: FileRecord, target: str) -> JobRec
     if not get_storage().exists(cached.output_key):
         return None
     ext = "zip" if cached.output_count > 1 else FORMATS[target].extension
-    return cached.model_copy(update={
-        "id": new_id(), "file_ids": [record.id], "output_name": f"{stem_of(record.name)}.{ext}",
-    })
+    return cached.model_copy(
+        update={
+            "id": new_id(),
+            "file_ids": [record.id],
+            "output_name": f"{stem_of(record.name)}.{ext}",
+        }
+    )
 
 
 @router.post("/convert", response_model=JobResponse)
@@ -56,8 +60,7 @@ async def convert(request: ConvertRequest) -> JobResponse:
         await save_job(hit)
         return JobResponse.of(hit)
 
-    job = JobRecord(id=new_id(), file_ids=[record.id], target=target,
-                    options=request.options, cache_key=cache_key)
+    job = JobRecord(id=new_id(), file_ids=[record.id], target=target, options=request.options, cache_key=cache_key)
     await save_job(job)
     await dispatch(job.id)
     return JobResponse.of(await get_job(job.id) or job)
@@ -67,8 +70,9 @@ async def convert(request: ConvertRequest) -> JobResponse:
 async def merge(request: MergeRequest) -> JobResponse:
     records = [await _load_file(fid) for fid in request.file_ids]
     if bad := [r.name for r in records if r.format not in MERGEABLE]:
-        raise ApiError(422, ErrorCode.UNSUPPORTED_CONVERSION,
-                       f"Only PDFs and images can be merged ({', '.join(bad)} can't).")
+        raise ApiError(
+            422, ErrorCode.UNSUPPORTED_CONVERSION, f"Only PDFs and images can be merged ({', '.join(bad)} can't)."
+        )
     job = JobRecord(id=new_id(), file_ids=[r.id for r in records], target="pdf")
     await save_job(job)
     await dispatch(job.id)

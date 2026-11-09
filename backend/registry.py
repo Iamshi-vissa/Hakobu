@@ -48,9 +48,7 @@ class ConversionRegistry:
                 self._edges.setdefault(src, {}).setdefault(dst, engine)
             for fmt in engine.transforms:
                 self._transformers.setdefault(fmt, engine)
-        self._paths: dict[str, dict[str, tuple[Step, ...]]] = {
-            src: self._bfs(src) for src in FORMATS
-        }
+        self._paths: dict[str, dict[str, tuple[Step, ...]]] = {src: self._bfs(src) for src in FORMATS}
 
     def _bfs(self, source: str) -> dict[str, tuple[Step, ...]]:
         paths: dict[str, tuple[Step, ...]] = {source: ()}

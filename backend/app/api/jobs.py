@@ -59,6 +59,12 @@ async def job_events(job_id: str, request: Request) -> StreamingResponse:
             await pubsub.unsubscribe()
             await pubsub.aclose()
 
-    return StreamingResponse(stream(), media_type="text/event-stream", headers={
-        "Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive",
-    })
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )

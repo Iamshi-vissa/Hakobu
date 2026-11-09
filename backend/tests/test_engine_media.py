@@ -13,8 +13,12 @@ ENGINE = MediaEngine()
 
 
 def _duration(path) -> float:
-    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
-                         capture_output=True, text=True, check=True).stdout
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
     return float(out)
 
 
@@ -33,8 +37,9 @@ def test_video_targets(samples, tmp_path, dst: str) -> None:
 def test_trim_and_progress(samples, tmp_path) -> None:
     seen: list[float] = []
     out = tmp_path / "out.mp3"
-    ENGINE.convert(samples.get("wav"), out, ConversionOptions(trim_start=0.5, trim_end=1.5, bitrate="96k"),
-                   progress=seen.append)
+    ENGINE.convert(
+        samples.get("wav"), out, ConversionOptions(trim_start=0.5, trim_end=1.5, bitrate="96k"), progress=seen.append
+    )
     assert 0.9 < _duration(out) < 1.2
     assert seen and max(seen) <= 1.0
 

@@ -35,8 +35,9 @@ def test_pandoc_never_embeds_local_files_or_urls(tmp_path) -> None:
 
 
 @requires("soffice")
-@pytest.mark.parametrize(("src", "dst"), [("docx", "pdf"), ("odt", "docx"), ("rtf", "odt"), ("txt", "pdf"),
-                                          ("docx", "doc"), ("html", "pdf")])
+@pytest.mark.parametrize(
+    ("src", "dst"), [("docx", "pdf"), ("odt", "docx"), ("rtf", "odt"), ("txt", "pdf"), ("docx", "doc"), ("html", "pdf")]
+)
 def test_libreoffice_writer(samples, tmp_path, src: str, dst: str) -> None:
     [out] = convert(OFFICE, samples.get(src), dst, tmp_path)
     assert detected(out) == dst

@@ -72,6 +72,7 @@ def _cell(value: Any) -> Any:
 
 # ---------- readers ----------
 
+
 def _read_delimited(path: Path, delimiter: str) -> Table:
     fh = _open_text(path)
     reader = csv.reader(fh, delimiter=delimiter)
@@ -136,8 +137,9 @@ def _xml_records(path: Path) -> Iterator[dict[str, str]]:
     """Each child of the root element is a record; its attributes and children are fields."""
     from lxml import etree
 
-    context = etree.iterparse(str(path), events=("start", "end"), resolve_entities=False,
-                              no_network=True, huge_tree=False, load_dtd=False)
+    context = etree.iterparse(
+        str(path), events=("start", "end"), resolve_entities=False, no_network=True, huge_tree=False, load_dtd=False
+    )
     depth = 0
     try:
         for event, element in context:
@@ -222,6 +224,7 @@ READERS: dict[str, Callable[[Path], Table]] = {
 
 # ---------- writers ----------
 
+
 def _write_delimited(out: Path, columns: Columns, rows: Iterable[list[Any]], delimiter: str) -> None:
     with out.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, delimiter=delimiter)
@@ -246,8 +249,10 @@ def _write_yaml(out: Path, columns: Columns, rows: Iterable[list[Any]]) -> None:
     with out.open("w", encoding="utf-8") as fh:
         wrote = False
         for row in rows:
-            record = {k: (v if isinstance(v, (int, float, str, bool, type(None))) else str(v))
-                      for k, v in zip(columns, row, strict=False)}
+            record = {
+                k: (v if isinstance(v, (int, float, str, bool, type(None))) else str(v))
+                for k, v in zip(columns, row, strict=False)
+            }
             yaml.safe_dump([record], fh, allow_unicode=True, sort_keys=False)
             wrote = True
         if not wrote:

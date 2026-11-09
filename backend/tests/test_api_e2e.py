@@ -67,16 +67,23 @@ def test_sse_stream_reports_final_state(client, samples) -> None:
 def test_chunked_resumable_upload(client, samples) -> None:
     data = samples.get("pdf").read_bytes()
     total, half = len(data), len(data) // 2
-    first = client.post("/api/upload", content=data[:half],
-                        headers={"X-File-Name": "doc.pdf", "Content-Range": f"bytes 0-{half - 1}/{total}"})
+    first = client.post(
+        "/api/upload",
+        content=data[:half],
+        headers={"X-File-Name": "doc.pdf", "Content-Range": f"bytes 0-{half - 1}/{total}"},
+    )
     assert first.status_code == 202
     upload_id = first.json()["upload_id"]
     headers = {"X-File-Name": "doc.pdf", "X-Upload-Id": upload_id}
-    wrong = client.post("/api/upload", content=data[half:],
-                        headers={**headers, "Content-Range": f"bytes {half + 10}-{total - 1}/{total}"})
+    wrong = client.post(
+        "/api/upload",
+        content=data[half:],
+        headers={**headers, "Content-Range": f"bytes {half + 10}-{total - 1}/{total}"},
+    )
     assert wrong.status_code == 409 and wrong.json()["error"]["received"] == half
-    done = client.post("/api/upload", content=data[half:],
-                       headers={**headers, "Content-Range": f"bytes {half}-{total - 1}/{total}"})
+    done = client.post(
+        "/api/upload", content=data[half:], headers={**headers, "Content-Range": f"bytes {half}-{total - 1}/{total}"}
+    )
     assert done.status_code == 200 and done.json()["format"]["id"] == "pdf" and done.json()["size"] == total
 
 
@@ -99,8 +106,10 @@ def test_result_cache_reuses_output(client, samples) -> None:
     first = start(client, upload(client, data, "one.png")["file_id"], "jpg", quality=70)
     second = start(client, upload(client, data, "two.png")["file_id"], "jpg", quality=70)
     assert second["job_id"] != first["job_id"] and second["output_name"] == "two.jpg"
-    assert client.get(f"/api/download/{second['job_id']}").content == \
-        client.get(f"/api/download/{first['job_id']}").content
+    assert (
+        client.get(f"/api/download/{second['job_id']}").content
+        == client.get(f"/api/download/{first['job_id']}").content
+    )
 
 
 def test_same_format_returns_original(client, samples) -> None:
@@ -115,10 +124,13 @@ def test_merge_pdf_and_images(client, samples) -> None:
     assert response.json()["status"] == "done" and response.json()["output_name"] == "merged.pdf"
 
 
-@pytest.mark.parametrize(("data", "code", "status"), [
-    (b"\x7fELF" + b"\x00" * 100, "unsupported_format", 415),
-    (b"", "invalid_request", 400),
-])
+@pytest.mark.parametrize(
+    ("data", "code", "status"),
+    [
+        (b"\x7fELF" + b"\x00" * 100, "unsupported_format", 415),
+        (b"", "invalid_request", 400),
+    ],
+)
 def test_upload_errors(client, data: bytes, code: str, status: int) -> None:
     response = client.post("/api/upload", content=data, headers={"X-File-Name": "x.png"})
     assert response.status_code == status and response.json()["error"]["code"] == code

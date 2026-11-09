@@ -105,8 +105,7 @@ async def upload(
         if rng and rng.start != 0:
             raise ApiError(409, ErrorCode.UPLOAD_CONFLICT, "Upload must start at byte 0.", received=0)
         upload_id = new_id()
-        session = _Session(name=sanitize_filename(unquote(x_file_name)),
-                           total=rng.total if rng else 0)
+        session = _Session(name=sanitize_filename(unquote(x_file_name)), total=rng.total if rng else 0)
     else:
         upload_id = checked_id(x_upload_id, "upload")
         raw = await redis.get(_session_key(upload_id))
@@ -119,8 +118,9 @@ async def upload(
     # One writer per upload at a time.
     lock = f"upload-lock:{upload_id}"
     if not await redis.set(lock, 1, nx=True, ex=settings.subprocess_timeout_seconds):
-        raise ApiError(409, ErrorCode.UPLOAD_CONFLICT, "A chunk for this upload is already in flight.",
-                       received=session.received)
+        raise ApiError(
+            409, ErrorCode.UPLOAD_CONFLICT, "A chunk for this upload is already in flight.", received=session.received
+        )
     incoming = f"incoming/{upload_id}"
     try:
         limit = rng.end + 1 if rng else settings.max_upload_bytes
@@ -134,8 +134,9 @@ async def upload(
             await redis.set(_session_key(upload_id), session.model_dump_json(), ex=settings.file_ttl_seconds)
             if session.received != rng.end + 1:
                 raise ApiError(409, ErrorCode.UPLOAD_CONFLICT, "Chunk was truncated.", received=session.received)
-            return JSONResponse(UploadProgress(upload_id=upload_id, received=session.received).model_dump(),
-                                status_code=202)
+            return JSONResponse(
+                UploadProgress(upload_id=upload_id, received=session.received).model_dump(), status_code=202
+            )
         await redis.delete(_session_key(upload_id))
         return await _finalize(incoming, session.name)
     finally:
@@ -150,8 +151,9 @@ async def _finalize(incoming: str, name: str) -> UploadResponse:
             raise ApiError(400, ErrorCode.INVALID_REQUEST, "The file is empty.")
         detection = detect(head, name, read_at=lambda offset, n: storage.read_range(incoming, offset, n))
         if detection.format is None:
-            raise ApiError(415, ErrorCode.UNSUPPORTED_FORMAT,
-                           "Hakobu doesn't recognise this file type.", mime=detection.mime)
+            raise ApiError(
+                415, ErrorCode.UNSUPPORTED_FORMAT, "Hakobu doesn't recognise this file type.", mime=detection.mime
+            )
         fmt = FORMATS[detection.format]
         with storage.local_path(incoming) as path:
             sha256 = await anyio.to_thread.run_sync(_sha256, path)
@@ -161,8 +163,15 @@ async def _finalize(incoming: str, name: str) -> UploadResponse:
     except BaseException:
         storage.delete_prefix(incoming)
         raise
-    record = FileRecord(id=file_id, name=name, format=fmt.id, mime=detection.mime,
-                        size=storage.size(key), sha256=sha256, key=key)
+    record = FileRecord(
+        id=file_id, name=name, format=fmt.id, mime=detection.mime, size=storage.size(key), sha256=sha256, key=key
+    )
     await save_file(record)
-    return UploadResponse(file_id=file_id, name=name, format=FormatInfo.of(fmt.id),
-                          mime=record.mime, size=record.size, targets=target_infos(fmt.id))
+    return UploadResponse(
+        file_id=file_id,
+        name=name,
+        format=FormatInfo.of(fmt.id),
+        mime=record.mime,
+        size=record.size,
+        targets=target_infos(fmt.id),
+    )

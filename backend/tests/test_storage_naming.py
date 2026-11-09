@@ -58,14 +58,17 @@ def test_purge_removes_only_expired_entries(tmp_path: Path) -> None:
     assert not old.exists() and fresh.exists()
 
 
-@pytest.mark.parametrize(("raw", "clean"), [
-    ("../../etc/passwd", "passwd"),
-    ("C:\\Users\\me\\photo.png", "photo.png"),
-    ("report<script>.pdf", "report_script_.pdf"),
-    ("\x00\x1fname.txt", "name.txt"),
-    ("...", "file"),
-    ("写真 2024.jpg", "写真 2024.jpg"),
-])
+@pytest.mark.parametrize(
+    ("raw", "clean"),
+    [
+        ("../../etc/passwd", "passwd"),
+        ("C:\\Users\\me\\photo.png", "photo.png"),
+        ("report<script>.pdf", "report_script_.pdf"),
+        ("\x00\x1fname.txt", "name.txt"),
+        ("...", "file"),
+        ("写真 2024.jpg", "写真 2024.jpg"),
+    ],
+)
 def test_sanitize_filename(raw: str, clean: str) -> None:
     assert sanitize_filename(raw) == clean
 

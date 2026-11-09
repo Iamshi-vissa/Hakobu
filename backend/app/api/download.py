@@ -50,8 +50,9 @@ async def download_batch(
             paths = [stack.enter_context(storage.local_path(key)) for key in keys]
             yield from iter_zip(zip(names, paths, strict=True))
 
-    return StreamingResponse(stream(), media_type="application/zip",
-                             headers={"Content-Disposition": _disposition("hakobu-files.zip")})
+    return StreamingResponse(
+        stream(), media_type="application/zip", headers={"Content-Disposition": _disposition("hakobu-files.zip")}
+    )
 
 
 @router.get("/download/{job_id}", response_class=StreamingResponse)
@@ -61,7 +62,11 @@ async def download(job_id: str) -> StreamingResponse:
     storage = get_storage()
     name = job.output_name or "file"
     media_type = "application/zip" if job.output_count > 1 else FORMATS[job.target].mime
-    return StreamingResponse(storage.iter_bytes(key), media_type=media_type, headers={
-        "Content-Disposition": _disposition(name),
-        "Content-Length": str(storage.size(key)),
-    })
+    return StreamingResponse(
+        storage.iter_bytes(key),
+        media_type=media_type,
+        headers={
+            "Content-Disposition": _disposition(name),
+            "Content-Length": str(storage.size(key)),
+        },
+    )

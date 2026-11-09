@@ -21,11 +21,15 @@ router = APIRouter()
 @lru_cache
 def _matrix() -> tuple[bytes, bytes, str]:
     """Serialised matrix (plain and gzipped) and its ETag; built once per process."""
-    body = FormatsResponse(
-        formats=[FormatInfo.of(fid) for fid in FORMATS],
-        conversions={src: target_infos(src) for src in get_registry().matrix()},
-        max_upload_mb=get_settings().max_upload_mb,
-    ).model_dump_json().encode()
+    body = (
+        FormatsResponse(
+            formats=[FormatInfo.of(fid) for fid in FORMATS],
+            conversions={src: target_infos(src) for src in get_registry().matrix()},
+            max_upload_mb=get_settings().max_upload_mb,
+        )
+        .model_dump_json()
+        .encode()
+    )
     return body, gzip.compress(body, 9), f'"{hashlib.sha256(body).hexdigest()[:32]}"'
 
 
