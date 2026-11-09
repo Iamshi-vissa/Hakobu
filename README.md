@@ -18,6 +18,25 @@ whole batch as a ZIP.
 
 ---
 
+## About
+
+Hakobu turns one kind of file into another: a HEIC photo into a JPG, a Word document into a PDF,
+a video into an MP3, and so on. You drop files on the page, pick the format you want, and download
+the result. It checks what each file really is before converting it, runs every conversion in a
+locked-down sandbox, and deletes everything after an hour.
+
+## Tech stack
+
+| Part | Tools |
+|---|---|
+| API | Python 3.11, FastAPI, Uvicorn, Pydantic |
+| Job queue | Redis, RQ workers |
+| Converters | LibreOffice (unoserver), FFmpeg, Pandoc, Calibre, Ghostscript, libvips, PyMuPDF, pandas |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS, React Bits |
+| Tooling | Docker Compose, pytest, ruff, ESLint |
+
+---
+
 ## Quick start
 
 ```bash
@@ -338,7 +357,7 @@ and the format matrix fetched once with SWR (plus HTTP caching/ETag).
 ```bash
 cd backend
 pytest              # 217 tests, ~25 s with every tool installed
-ruff check .
+ruff check . && ruff format --check .
 ```
 
 ```bash
@@ -355,3 +374,19 @@ end-to-end HTTP flows:
 - error states and rate limiting.
 
 Tests needing a missing external tool are skipped, not failed.
+
+---
+
+## Status
+
+Feature-complete for its scope: every engine, batch conversion, resumable uploads, progress
+streaming and the safety limits are implemented and tested.
+
+Possible next steps:
+- Add CI (GitHub Actions) to run the tests and linters on every push.
+- Publish the Docker images so it can run without building locally.
+- Add a license so others know how they may use the code.
+
+## License
+
+No license has been added yet, so all rights are reserved by default.
