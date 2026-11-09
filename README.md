@@ -1,10 +1,10 @@
-# <img src="docs/headers/h1-hakobu.svg" alt="HAKOBU" height="60">
+# HAKOBU
 
 A file converter you run yourself. Drop in a file, pick the format you want, and download the result.
 
 ![Hakobu converting a batch of files](docs/screenshot.png)
 
-## <img src="docs/headers/h2-about.svg" alt="ABOUT" height="38">
+## ABOUT
 
 Hakobu looks at what a file actually is (from its contents, not its name), shows only the formats
 it can be turned into, and converts it with a live *progress bar*. You can convert one file or a whole
@@ -14,7 +14,7 @@ It handles about 50 formats across images, documents, spreadsheets, presentation
 e-books and archives. When there's no direct way from one format to another, Hakobu chains steps
 together on its own, for example PPTX to PDF to PNG. Uploaded files are deleted after an hour.
 
-## <img src="docs/headers/h2-features.svg" alt="FEATURES" height="38">
+## FEATURES
 
 - Detects the *real file type* from its bytes and rejects executables and unknown files
 - 800+ conversion paths, including multi-step ones found automatically
@@ -25,7 +25,7 @@ together on its own, for example PPTX to PDF to PNG. Uploaded files are deleted 
 - Conversions run in a *sandbox* with time and memory limits
 - Missing tools only switch off the formats that need them; the rest keeps working
 
-## <img src="docs/headers/h2-how-it-works.svg" alt="HOW IT WORKS" height="38">
+## HOW IT WORKS
 
 1. The browser uploads the file to the API in chunks.
 2. The API reads the start of the file to work out its real format.
@@ -33,7 +33,7 @@ together on its own, for example PPTX to PDF to PNG. Uploaded files are deleted 
 4. A background *worker* runs those steps with tools like *LibreOffice*, *FFmpeg*, Pandoc and Calibre.
 5. Progress is sent back to the page as it happens, and the finished file is ready to download.
 
-## <img src="docs/headers/h2-architecture.svg" alt="ARCHITECTURE" height="38">
+## ARCHITECTURE
 
 ```mermaid
 flowchart LR
@@ -49,7 +49,7 @@ flowchart LR
 
 The API never converts files itself. It hands each job to a *worker*, and progress flows back to the page through Redis.
 
-## <img src="docs/headers/h2-tech-stack.svg" alt="TECH STACK" height="38">
+## TECH STACK
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-000000?style=flat-square&logo=python&logoColor=white" alt="Python">
@@ -72,9 +72,9 @@ The API never converts files itself. It hands each job to a *worker*, and progre
 | Web app | Next.js, React, TypeScript, Tailwind CSS, React Bits, shadcn/ui |
 | Deployment | Docker Compose |
 
-## <img src="docs/headers/h2-getting-started.svg" alt="GETTING STARTED" height="38">
+## GETTING STARTED
 
-### <img src="docs/headers/h3-with-docker-easiest.svg" alt="WITH DOCKER (EASIEST)" height="28">
+### WITH DOCKER (EASIEST)
 
 You need Docker.
 
@@ -87,7 +87,7 @@ docker compose up --build
 Open <http://localhost:3000>. The API runs on <http://localhost:8000>, with interactive docs at
 `/docs`.
 
-### <img src="docs/headers/h3-without-docker.svg" alt="WITHOUT DOCKER" height="28">
+### WITHOUT DOCKER
 
 You need Python 3.11+, Node.js 22+, Redis and the conversion tools on your `PATH` (*FFmpeg*,
 *LibreOffice*, Pandoc, Calibre, Ghostscript and libvips). `GET /api/health` shows which tools were
@@ -114,7 +114,7 @@ npm run dev                                  # http://localhost:3000
 
 Tip: set `HAKOBU_SYNC_JOBS=1` to run conversions inside the API without a separate *worker*.
 
-## <img src="docs/headers/h2-supported-formats.svg" alt="SUPPORTED FORMATS" height="38">
+## SUPPORTED FORMATS
 
 | Category | Formats |
 |---|---|
@@ -129,7 +129,7 @@ Tip: set `HAKOBU_SYNC_JOBS=1` to run conversions inside the API without a separa
 
 The full list of what converts to what is available from `GET /api/formats`.
 
-## <img src="docs/headers/h2-running-the-tests.svg" alt="RUNNING THE TESTS" height="38">
+## RUNNING THE TESTS
 
 ```bash
 cd backend
@@ -142,7 +142,7 @@ cd frontend
 npx tsc --noEmit && npm run lint && npm run build
 ```
 
-## <img src="docs/headers/h2-project-structure.svg" alt="PROJECT STRUCTURE" height="38">
+## PROJECT STRUCTURE
 
 ```
 backend/
@@ -159,7 +159,7 @@ docs/
   DEVELOPMENT.md  API, configuration, architecture and how to add an engine
 ```
 
-## <img src="docs/headers/h2-status.svg" alt="STATUS" height="38">
+## STATUS
 
 Version 1 is complete and working. Possible next steps:
 
@@ -167,6 +167,6 @@ Version 1 is complete and working. Possible next steps:
 - Let people save conversion presets
 - Add OCR for scanned PDFs
 
-## <img src="docs/headers/h2-license.svg" alt="LICENSE" height="38">
+## LICENSE
 
 MIT. See [LICENSE](LICENSE).
